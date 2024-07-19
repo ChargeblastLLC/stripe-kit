@@ -790,12 +790,14 @@ public enum ChargePaymentMethodDetailsIdealBank: String, Codable {
     case ing
     case knab
     case moneyou
+    case n26
     case rabobank
     case regiobank
     case revolut
     case snsBank = "sns_bank"
     case triodosBank = "triodos_bank"
     case vanLanschot = "van_lanschot"
+    case unknown
 }
 
 // MARK: - InteracPresent
@@ -1090,6 +1092,7 @@ public enum ChargePaymentMethodDetailsP24Bank: String, Codable {
     case creditAgricole = "credit_agricole"
     case toyotaBank = "toyota_bank"
     case bankPekaoSa = "bank_pekao_sa"
+    case velobank
     case volkswagenBank = "volkswagen_bank"
     case bankMillennium = "bank_millennium"
     case aliorBank = "alior_bank"

@@ -73,6 +73,7 @@ public enum Currency: String, Codable, CaseIterable {
     case kmf
     case krw
     case kyd
+    case kwd
     case kzt
     case lak
     case lbp
