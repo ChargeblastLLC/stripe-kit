@@ -100,6 +100,7 @@ public enum Currency: String, Codable, CaseIterable {
     case nok
     case npr
     case nzd
+    case omr
     case pab
     case pen
     case pgk
