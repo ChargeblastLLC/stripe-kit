@@ -100,6 +100,7 @@ public struct BalanceTransactionFeeDetails: Codable {
 }
 
 public enum BalanceTransactionFeeDetailsType: String, Codable {
+    case paymentMethodPassthroughFee = "payment_method_passthrough_fee"
     case applicationFee = "application_fee"
     case stripeFee = "stripe_fee"
     case tax

@@ -121,6 +121,7 @@ public enum DisputeStatus: String, Codable {
     case chargeRefunded = "charge_refunded"
     case won
     case lost
+    case protected
 }
 
 public struct DisputeList: Codable {

@@ -509,6 +509,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case affirm
     case afterpayClearpay = "afterpay_clearpay"
     case alipay
+    case amazonPay = "amazon_pay"
     case auBecsDebit = "au_becs_debit"
     case bacsDebit = "bacs_debit"
     case bancontact
@@ -534,9 +535,11 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case paypal
     case pix
     case promptpay
+    case revolutPay = "revolut_pay"
     case sepaDebit = "sepa_debit"
     case sofort
     case stripeAccount = "stripe_account"
+    case swish
     case usBankAccount = "us_bank_account"
     case wechat
     case wechatPay = "wechat_pay"
