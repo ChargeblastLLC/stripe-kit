@@ -32,7 +32,7 @@ public struct TaxRate: Codable {
     /// String representing the object’s type. Objects of the same type share the same value.
     public var object: String
     /// Time at which the object was created. Measured in seconds since the Unix epoch.
-    public var created: Date
+    public var created: Date?
     /// Has the value true if the object exists in live mode or the value false if the object exists in test mode.
     public var livemode: Bool?
     /// The high-level tax type, such as `vat` or `sales_tax`.
@@ -49,7 +49,7 @@ public struct TaxRate: Codable {
                 percentage: Decimal? = nil,
                 state: String? = nil,
                 object: String,
-                created: Date,
+                created: Date?,
                 livemode: Bool? = nil,
                 taxType: TaxRateTaxType? = nil) {
         self.id = id
