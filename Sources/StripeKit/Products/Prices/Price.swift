@@ -32,7 +32,7 @@ public struct Price: Codable {
     /// Describes how to compute the price per period. Either `per_unit` or `tiered`. `per_unit` indicates that the fixed amount (specified in `unit_amount` or `unit_amount_decimal`) will be charged per unit in quantity (for prices with `usage_type=licensed`), or per unit of total usage (for prices with `usage_type=metered`). `tiered` indicates that the unit pricing will be computed using a tiering strategy as defined using the `tiers` and `tiers_mode` attributes.
     public var billingScheme: PriceBillingScheme?
     /// Time at which the object was created. Measured in seconds since the Unix epoch.
-    public var created: Date
+    public var created: Date?
     /// Prices defined in each available currency option. Each key must be a three-letter ISO currency code and a supported currency. For example, to get your price in eur, fetch the value of the eur key in `currency_options`. This field is not included by default. To include it in the response, expand the `currency_options` field.
     public var currencyOptions: [Currency: PriceCurrencyOption]?
     /// When set, provides configuration for the amount to be adjusted by the customer during Checkout Sessions and Payment Links.
@@ -63,7 +63,7 @@ public struct Price: Codable {
                 unitAmount: Int? = nil,
                 object: String,
                 billingScheme: PriceBillingScheme? = nil,
-                created: Date,
+                created: Date?,
                 currencyOptions: [Currency: PriceCurrencyOption]? = nil,
                 customUnitAmount: PriceCustomUnitAmount? = nil,
                 livemode: Bool? = nil,
