@@ -25,7 +25,7 @@ public struct Product: Codable {
     /// String representing the object’s type. Objects of the same type share the same value.
     public var object: String
     /// Time at which the object was created. Measured in seconds since the Unix epoch.
-    public var created: Date
+    public var created: Date?
     /// A list of up to 8 URLs of images for this product, meant to be displayable to the customer. Only applicable to products of `type=good`.
     public var images: [String]?
     /// Has the value `true` if the object exists in live mode or the value `false` if the object exists in test mode.
@@ -52,7 +52,7 @@ public struct Product: Codable {
                 metadata: [String : String]? = nil,
                 name: String? = nil,
                 object: String,
-                created: Date,
+                created: Date?,
                 images: [String]? = nil,
                 livemode: Bool? = nil,
                 packageDimensions: ProductPackageDimensions? = nil,
