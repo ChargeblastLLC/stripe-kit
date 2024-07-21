@@ -232,6 +232,10 @@ public enum StripeErrorCode: String, Codable {
     case upstreamOrderCreationFailed = "upstream_order_creation_failed"
     /// The URL provided is invalid.
     case urlInvalid = "url_invalid"
+    /// The customer has entered an invalid tax location
+    case customerTaxLocationInvalid = "customer_tax_location_invalid"
+    /// The scopes are not provided for the requested resource
+    case morePermissionsRequiredForApplication = "more_permissions_required_for_application"
 }
 
 // https://stripe.com/docs/api#errors-decline-code
@@ -325,8 +329,6 @@ public enum StripeDeclineCode: String, Codable {
     case withdrawalCountLimitExceeded = "withdrawal_count_limit_exceeded"
 	/// The request was in test mode, but used a non test (live) card. For a list of valid test cards, visit: https://stripe.com/docs/testing.
     case testModeLiveCard = "test_mode_live_card"
-    /// The customer has entered an invalid tax location
-    case customerTaxLocationInvalid = "customer_tax_location_invalid"
 
     public var nextSteps: String {
         switch self {
@@ -374,7 +376,6 @@ public enum StripeDeclineCode: String, Codable {
         case .tryAgainLater: return "Ask the customer to attempt the payment again. If subsequent payments are declined, the customer should contact their card issuer for more information."
         case .withdrawalCountLimitExceeded: return "The customer should use an alternative payment method."
         case .testModeLiveCard: return "The customer should use a test card https://stripe.com/docs/testing#cards"
-        case .customerTaxLocationInvalid: return "The customer needs to enter a valid tax location."
         }
     }
 }
