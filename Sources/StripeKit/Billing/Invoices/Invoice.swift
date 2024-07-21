@@ -73,7 +73,7 @@ public struct Invoice: Codable {
     /// Indicates the reason why the invoice was created. `subscription_cycle` indicates an invoice created by a subscription advancing into a new period. `subscription_create` indicates an invoice created due to creating a subscription. `subscription_update` indicates an invoice created due to updating a subscription. `subscription` is set for all old invoices to indicate either a change to a subscription or a period advancement. `manual` is set for all invoices unrelated to a subscription (for example: created via the invoice editor). The `upcoming` value is reserved for simulated invoices per the upcoming invoice endpoint. `subscription_threshold` indicates an invoice created due to a billing threshold being reached.
     public var billingReason: InvoiceBillingReason?
     /// Time at which the object was created. Measured in seconds since the Unix epoch.
-    public var created: Date
+    public var created: Date?
     /// Custom fields displayed on the invoice.
     public var customFields: [InvoiceCustomField]?
     /// The customer’s address. Until the invoice is finalized, this field will equal customer.address. Once the invoice is finalized, this field will no longer be updated.
@@ -196,7 +196,7 @@ public struct Invoice: Codable {
                 attempted: Bool? = nil,
                 automaticTax: InvoiceAutomaticTax? = nil,
                 billingReason: InvoiceBillingReason? = nil,
-                created: Date,
+                created: Date?,
                 customFields: [InvoiceCustomField]? = nil,
                 customerAddress: Address? = nil,
                 customerEmail: String? = nil,
@@ -365,6 +365,7 @@ public enum InvoiceBillingReason: String, Codable {
     case manual
     case upcoming
     case subscriptionThreshold = "subscription_threshold"
+    case quoteAccept = "quote_accept"
 }
 
 public struct InvoiceCustomField: Codable {

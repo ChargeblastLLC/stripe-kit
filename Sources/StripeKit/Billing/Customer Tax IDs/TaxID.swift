@@ -101,6 +101,8 @@ public enum TaxIDType: String, Codable {
     case uaVat = "ua_vat"
     case usEin = "us_ein"
     case zaVat = "za_vat"
+    case ngTin = "ng_tin"
+    case vnTin = "vn_tin"
     case unknown
 }
 

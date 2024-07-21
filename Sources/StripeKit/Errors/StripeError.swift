@@ -325,7 +325,9 @@ public enum StripeDeclineCode: String, Codable {
     case withdrawalCountLimitExceeded = "withdrawal_count_limit_exceeded"
 	/// The request was in test mode, but used a non test (live) card. For a list of valid test cards, visit: https://stripe.com/docs/testing.
     case testModeLiveCard = "test_mode_live_card"
-    
+    /// The customer has entered an invalid tax location
+    case customerTaxLocationInvalid = "customer_tax_location_invalid"
+
     public var nextSteps: String {
         switch self {
         case .approveWithId: return "The payment should be attempted again. If it still cannot be processed, the customer needs to contact their card issuer."
@@ -372,6 +374,7 @@ public enum StripeDeclineCode: String, Codable {
         case .tryAgainLater: return "Ask the customer to attempt the payment again. If subsequent payments are declined, the customer should contact their card issuer for more information."
         case .withdrawalCountLimitExceeded: return "The customer should use an alternative payment method."
         case .testModeLiveCard: return "The customer should use a test card https://stripe.com/docs/testing#cards"
+        case .customerTaxLocationInvalid: return "The customer needs to enter a valid tax location."
         }
     }
 }

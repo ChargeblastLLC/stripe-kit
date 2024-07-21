@@ -197,6 +197,11 @@ public enum PaymentMethodType: String, Codable {
     case sofort
     case usBankAccount = "us_bank_account"
     case wechatPay = "wechat_pay"
+    case achCreditTransfer = "ach_credit_transfer"
+    case amazonPay = "amazon_pay"
+    case revolutPay = "revolut_pay"
+    case swish
+    case paypal
 }
 
 public struct PaymentMethodRadarOptions: Codable {
