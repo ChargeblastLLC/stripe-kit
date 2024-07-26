@@ -259,7 +259,9 @@ public struct ChargePaymentMethodDetailsCard: Codable {
     public var threeDSecure: ChargePaymentMethodDetailsCardThreeDSecure?
     /// If this Card is part of a card wallet, this contains the details of the card wallet.
     public var wallet: ChargePaymentMethodDetailsCardWallet?
-    
+    /// The issuer identification number for the card. This is the first six digits of a card number.
+    public var iin: String?
+
     public init(brand: PaymentMethodDetailsCardBrand? = nil,
                 captureBefore: Date? = nil,
                 checks: PaymentMethodDetailsCardChecks? = nil,
@@ -272,7 +274,8 @@ public struct ChargePaymentMethodDetailsCard: Codable {
                 last4: String? = nil,
                 network: PaymentMethodCardNetwork? = nil,
                 threeDSecure: ChargePaymentMethodDetailsCardThreeDSecure? = nil,
-                wallet: ChargePaymentMethodDetailsCardWallet? = nil) {
+                wallet: ChargePaymentMethodDetailsCardWallet? = nil,
+                iin: String? = nil) {
         self.brand = brand
         self.captureBefore = captureBefore
         self.checks = checks
@@ -286,6 +289,7 @@ public struct ChargePaymentMethodDetailsCard: Codable {
         self.network = network
         self.threeDSecure = threeDSecure
         self.wallet = wallet
+        self.iin = iin
     }
 }
 
