@@ -1101,6 +1101,7 @@ public enum ChargePaymentMethodDetailsP24Bank: String, Codable {
     case bankMillennium = "bank_millennium"
     case aliorBank = "alior_bank"
     case boz = "boz"
+    case unknown = ""
 }
 
 // MARK: - Paynow

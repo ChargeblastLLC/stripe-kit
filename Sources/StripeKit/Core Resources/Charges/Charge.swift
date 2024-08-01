@@ -529,6 +529,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case konbini
     case link
     case multibanco
+    case mobilepay
     case oxxo
     case p24
     case paynow
