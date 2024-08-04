@@ -111,6 +111,7 @@ public enum TaxIDType: String, Codable {
     case cnTin = "cn_tin"
     case doRcn = "do_rcn"
     case roTin = "ro_tin"
+    case ecRuc = "ec_ruc"
     case unknown
 }
 
