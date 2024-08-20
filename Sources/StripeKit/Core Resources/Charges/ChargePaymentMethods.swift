@@ -802,6 +802,7 @@ public enum ChargePaymentMethodDetailsIdealBank: String, Codable {
     case triodosBank = "triodos_bank"
     case vanLanschot = "van_lanschot"
     case unknown
+    case yoursafe
 }
 
 // MARK: - InteracPresent

@@ -190,6 +190,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case unionpay
     case visa
     case unknown
+    case carneti
 }
 
 public struct PaymentMethodDetailsCardChecks: Codable {
