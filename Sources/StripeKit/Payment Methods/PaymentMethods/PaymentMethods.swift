@@ -135,6 +135,8 @@ public struct PaymentMethodCard: Codable {
     public var wallet: PaymentMethodCardWallet?
     /// The issuer identification number for the card. This is the first six digits of a card number.
     public var iin: String?
+    /// The issuer name - e.g. JPMORGAN CHASE BANK N.A. - DEBIT
+    public var issuer: String?
     
     public init(brand: PaymentMethodDetailsCardBrand? = nil,
                 checks: PaymentMethodDetailsCardChecks? = nil,
@@ -148,7 +150,8 @@ public struct PaymentMethodCard: Codable {
                 networks: PaymentMethodCardNetworks? = nil,
                 threeDSecureUsage: PaymentMethodCardThreeDSecureUsage? = nil,
                 wallet: PaymentMethodCardWallet? = nil,
-                iin: String? = nil) {
+                iin: String? = nil,
+                issuer: String? = nil) {
         self.brand = brand
         self.checks = checks
         self.country = country
@@ -162,6 +165,7 @@ public struct PaymentMethodCard: Codable {
         self.threeDSecureUsage = threeDSecureUsage
         self.wallet = wallet
         self.iin = iin
+        self.issuer = issuer
     }
 }
 
