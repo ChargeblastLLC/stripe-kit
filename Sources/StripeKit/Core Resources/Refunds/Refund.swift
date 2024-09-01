@@ -188,8 +188,8 @@ public struct RefundDestinationDetails: Codable {
 }
 
 public struct RefundDestinationCardReference: Codable {
-    let reference: String?
-    let reference_status: String?
-    let reference_type: String?
-    let type: String?
+    public let reference: String?
+    public let reference_status: String?
+    public let reference_type: String?
+    public let type: String?
 }
