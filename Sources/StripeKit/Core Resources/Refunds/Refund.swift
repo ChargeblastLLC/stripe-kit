@@ -44,6 +44,8 @@ public struct Refund: Codable {
     public var nextAction: RefundNextAction?
     /// This is the transaction number that appears on email receipts sent for this refund.
     public var receiptNumber: String?
+    /// Contains refund destination details like the ARN number
+    public var destinationDetails: RefundDestinationDetails?
     /// The transfer reversal that is associated with the refund. Only present if the charge came from another Stripe account. See the Connect documentation for details.
     @Expandable<TransferReversal> public var sourceTransferReversal: String?
     /// If the accompanying transfer was reversed, the transfer reversal object. Only applicable if the charge was created using the destination parameter.
@@ -67,7 +69,8 @@ public struct Refund: Codable {
                 nextAction: RefundNextAction? = nil,
                 receiptNumber: String? = nil,
                 sourceTransferReversal: String? = nil,
-                transferReversal: String? = nil) {
+                transferReversal: String? = nil,
+                destinationDetails: RefundDestinationDetails? = nil) {
         self.id = id
         self.amount = amount
         self._charge = Expandable(id: charge)
@@ -85,6 +88,7 @@ public struct Refund: Codable {
         self.instructionsEmail = instructionsEmail
         self.nextAction = nextAction
         self.receiptNumber = receiptNumber
+        self.destinationDetails = destinationDetails
         self._sourceTransferReversal = Expandable(id: sourceTransferReversal)
         self._transferReversal = Expandable(id: transferReversal)
     }
@@ -168,4 +172,24 @@ public struct RefundsList: Codable {
         self.url = url
         self.data = data
     }
+}
+
+public struct RefundDestinationDetails: Codable {
+    /// Contains the refund details.
+    public var card: RefundDestinationCardReference?
+    /// Type of the next action to perform.
+    public var type: String?
+    
+    public init(card: RefundDestinationCardReference? = nil,
+                type: String? = nil) {
+        self.card = card
+        self.type = type
+    }
+}
+
+public struct RefundDestinationCardReference: Codable {
+    let reference: String?
+    let reference_status: String?
+    let reference_type: String?
+    let type: String?
 }
