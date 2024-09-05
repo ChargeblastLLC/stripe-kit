@@ -264,7 +264,7 @@ public struct ChargePaymentMethodDetailsCard: Codable {
     /// The issuer name - e.g. JPMORGAN CHASE BANK N.A. - DEBIT
     public var issuer: String?
     /// Authorization code
-    public var authorization_code: String?
+    public var authorizationCode: String?
     
     public init(brand: PaymentMethodDetailsCardBrand? = nil,
                 captureBefore: Date? = nil,
@@ -281,9 +281,9 @@ public struct ChargePaymentMethodDetailsCard: Codable {
                 wallet: ChargePaymentMethodDetailsCardWallet? = nil,
                 iin: String? = nil,
                 issuer: String? = nil,
-                authorization_code: String? = nil) {
+                authorizationCode: String? = nil) {
         self.brand = brand
-        self.authorization_code = authorization_code
+        self.authorizationCode = authorizationCode
         self.captureBefore = captureBefore
         self.checks = checks
         self.country = country
