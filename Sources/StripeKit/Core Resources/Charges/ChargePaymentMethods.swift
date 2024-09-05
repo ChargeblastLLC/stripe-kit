@@ -263,7 +263,9 @@ public struct ChargePaymentMethodDetailsCard: Codable {
     public var iin: String?
     /// The issuer name - e.g. JPMORGAN CHASE BANK N.A. - DEBIT
     public var issuer: String?
-
+    /// Authorization code
+    public var authorization_code: String?
+    
     public init(brand: PaymentMethodDetailsCardBrand? = nil,
                 captureBefore: Date? = nil,
                 checks: PaymentMethodDetailsCardChecks? = nil,
@@ -278,8 +280,10 @@ public struct ChargePaymentMethodDetailsCard: Codable {
                 threeDSecure: ChargePaymentMethodDetailsCardThreeDSecure? = nil,
                 wallet: ChargePaymentMethodDetailsCardWallet? = nil,
                 iin: String? = nil,
-                issuer: String? = nil) {
+                issuer: String? = nil,
+                authorization_code: String? = nil) {
         self.brand = brand
+        self.authorization_code = authorization_code
         self.captureBefore = captureBefore
         self.checks = checks
         self.country = country
