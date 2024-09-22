@@ -109,6 +109,7 @@ public enum RefundStatus: String, Codable {
     case succeeded
     case failed
     case canceled
+    case requires_action
 }
 
 public enum RefundReason: String, Codable {

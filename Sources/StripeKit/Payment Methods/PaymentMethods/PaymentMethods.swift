@@ -195,6 +195,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case visa
     case unknown
     case carneti
+    case carnet
 }
 
 public struct PaymentMethodDetailsCardChecks: Codable {

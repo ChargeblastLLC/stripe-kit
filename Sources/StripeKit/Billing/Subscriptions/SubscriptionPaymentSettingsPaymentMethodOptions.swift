@@ -127,6 +127,8 @@ public enum SubscriptionPaymentSettingsPaymentMethodOptionsCardRequestThreedSecu
     case automatic
     /// Requires 3D Secure authentication if it is available.
     case any
+    
+    case challenge
 }
 
 // MARK: Customer Balance

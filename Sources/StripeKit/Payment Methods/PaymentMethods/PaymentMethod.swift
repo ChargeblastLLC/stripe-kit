@@ -202,6 +202,7 @@ public enum PaymentMethodType: String, Codable {
     case revolutPay = "revolut_pay"
     case swish
     case paypal
+    case multibanco
 }
 
 public struct PaymentMethodRadarOptions: Codable {
