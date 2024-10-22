@@ -518,7 +518,8 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case card
     case cardPresent = "card_present"
     case cashapp
-    case customerBalance = "customer_balance"    
+    case customerBalance = "customer_balance"
+    case crypto
     case eps
     case fpx
     case giropay
