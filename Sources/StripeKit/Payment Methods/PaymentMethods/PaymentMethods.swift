@@ -179,6 +179,7 @@ public enum PaymentMethodDetailsCardBrand: String, Codable {
     case unionpay
     case visa
     case unknown
+    case link
 }
 
 public enum PaymentMethodCardNetwork: String, Codable {
