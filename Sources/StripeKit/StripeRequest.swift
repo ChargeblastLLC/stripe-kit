@@ -50,7 +50,6 @@ struct StripeAPIHandler {
         headers.forEach { _headers.replaceOrAdd(name: $0.name, value: $0.value) }
             
         let url = "\(path)?\(query)"
-        print(url)
         var request = HTTPClientRequest(url: url)
         request.headers = _headers
         request.method = method
