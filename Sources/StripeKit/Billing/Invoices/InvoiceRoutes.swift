@@ -645,7 +645,7 @@ public struct StripeInvoiceRoutes: InvoiceRoutes {
         return try await apiHandler.send(method: .GET, path: invoices, query: queryParams, headers: headers)
     }
     
-    public func search(query: String, limit: Int? = nil, page: String? = nil, expand: String? = nil) async throws -> InvoiceSearchResult {
+    public func search(query: String, limit: Int? = nil, page: String? = nil, expand: [String]? = nil) async throws -> InvoiceSearchResult {
         var queryParams: [String: Any] = ["query": query]
         if let limit {
             queryParams["limit"] = limit
