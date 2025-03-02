@@ -49,7 +49,9 @@ struct StripeAPIHandler {
                                      "Content-Type": "application/x-www-form-urlencoded"]
         headers.forEach { _headers.replaceOrAdd(name: $0.name, value: $0.value) }
             
-        var request = HTTPClientRequest(url: "\(path)?\(query)")
+        let url = "\(path)?\(query)"
+        print(url)
+        var request = HTTPClientRequest(url: url)
         request.headers = _headers
         request.method = method
         request.body = body
