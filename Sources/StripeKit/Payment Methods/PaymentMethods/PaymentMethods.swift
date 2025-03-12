@@ -180,6 +180,7 @@ public enum PaymentMethodDetailsCardBrand: String, Codable {
     case visa
     case unknown
     case link
+    case girocard
 }
 
 public enum PaymentMethodCardNetwork: String, Codable {
@@ -198,6 +199,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case carneti
     case carnet
     case link
+    case girocard
 }
 
 public struct PaymentMethodDetailsCardChecks: Codable {
