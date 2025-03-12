@@ -110,6 +110,7 @@ public enum DisputeReason: String, Codable {
     case productUnacceptable = "product_unacceptable"
     case subscriptionCanceled = "subscription_canceled"
     case unrecognized
+    case noncompliant = "noncompliant"
 }
 
 public enum DisputeStatus: String, Codable {
