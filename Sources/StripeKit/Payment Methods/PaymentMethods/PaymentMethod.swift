@@ -203,6 +203,8 @@ public enum PaymentMethodType: String, Codable {
     case swish
     case paypal
     case multibanco
+    case sepaCreditTransfer = "sepa_credit_transfer"
+    case crypto = "crypto"
 }
 
 public struct PaymentMethodRadarOptions: Codable {

@@ -547,6 +547,8 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case wechatPay = "wechat_pay"
     case zip
     case twint
+    case qris
+    case krCard = "kr_card"
 }
 
 public struct ChrageRadarOptions: Codable {

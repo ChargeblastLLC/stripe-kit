@@ -123,7 +123,15 @@ public enum TaxIDType: String, Codable {
     case peRuc = "pe_ruc"
     case svNit = "sv_nit"
     case uyRuc = "uy_ruc"
-    
+    case uzVat = "uz_vat"
+    case ugTin = "ug_tin"
+    case mkVat = "mk_vat"
+    case mdVat = "md_vat"
+    case maVat = "ma_vat"
+    case khTin = "kh_tin"
+    case hrOib = "hr_oib"
+    case aoTin = "ao_tin"
+    case alTin = "al_tin"
     case unknown
 }
 
