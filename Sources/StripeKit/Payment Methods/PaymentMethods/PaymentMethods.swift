@@ -201,6 +201,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case link
     case girocard
     case maestro
+    case nyce
 }
 
 public struct PaymentMethodDetailsCardChecks: Codable {
