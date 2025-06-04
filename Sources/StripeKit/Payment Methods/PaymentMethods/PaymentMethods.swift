@@ -203,6 +203,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case maestro
     case nyce
     case pulse
+    case accel
 }
 
 public struct PaymentMethodDetailsCardChecks: Codable {
