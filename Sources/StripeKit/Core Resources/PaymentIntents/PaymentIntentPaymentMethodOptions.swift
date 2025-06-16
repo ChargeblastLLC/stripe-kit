@@ -502,6 +502,8 @@ public enum PaymentIntentPaymentMethodOptionsCustomerBalanceBankTransferType: St
     case jpBankTransfer = "jp_bank_transfer"
     /// A bank transfer of type `mx_bank_transfer`
     case mxBankTransfer = "mx_bank_transfer"
+    /// A bank transfer of type `us_bank_transfer`
+    case usBankTransfer = "us_bank_transfer"
 }
 
 // MARK: - EPS
