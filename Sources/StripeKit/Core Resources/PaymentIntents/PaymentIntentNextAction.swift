@@ -224,6 +224,7 @@ public enum PaymentIntentNextActionType: String, Codable {
     case alipayHandleRedirect = "alipay_handle_redirect"
     case oxxoDisplayDetails = "oxxo_display_details"
     case verifyWithMicrodeposits = "verify_with_microdeposits"
+    case cashappHandleRedirectOrDisplayQrCode = "cashapp_handle_redirect_or_display_qr_code"
 }
 
 public struct PaymentIntentNextActionVerifyWithMicrodeposits: Codable {
