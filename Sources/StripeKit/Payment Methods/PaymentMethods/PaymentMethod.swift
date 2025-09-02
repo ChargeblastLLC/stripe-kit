@@ -205,6 +205,7 @@ public enum PaymentMethodType: String, Codable {
     case multibanco
     case sepaCreditTransfer = "sepa_credit_transfer"
     case crypto = "crypto"
+    case ngBankTransfer = "ng_bank_transfer"
 }
 
 public struct PaymentMethodRadarOptions: Codable {

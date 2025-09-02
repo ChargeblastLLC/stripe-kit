@@ -549,6 +549,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case twint
     case qris
     case krCard = "kr_card"
+    case ngCard = "ng_card"
 }
 
 public struct ChrageRadarOptions: Codable {
