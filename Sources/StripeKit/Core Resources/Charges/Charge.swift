@@ -551,6 +551,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case krCard = "kr_card"
     case ngCard = "ng_card"
     case kakaoPay = "kakao_pay"
+    case naverPay = "naver_pay"
 }
 
 public struct ChrageRadarOptions: Codable {
