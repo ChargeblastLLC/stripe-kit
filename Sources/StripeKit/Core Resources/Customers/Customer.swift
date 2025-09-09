@@ -33,7 +33,7 @@ public struct Customer: Codable {
     /// The current funds being held by Stripe on behalf of the customer. These funds can be applied towards payment intents with source `“cash_balance”`. The settings[reconciliation_mode] field describes whether these funds are applied to such payment intents manually or automatically. This field is not included by default. To include it in the response, expand the `cash_balance field`.
     public var cashBalance: CustomerCashBalance?
     /// Time at which the object was created. Measured in seconds since the Unix epoch.
-    public var created: Date
+    public var created: Date?
     /// Three-letter ISO code for the currency the customer can be charged in for recurring billing purposes.
     public var currency: Currency?
     /// ID of the default payment source for the customer.
