@@ -123,6 +123,7 @@ public enum DisputeStatus: String, Codable {
     case won
     case lost
     case protected
+    case prevented
 }
 
 public struct DisputeList: Codable {
