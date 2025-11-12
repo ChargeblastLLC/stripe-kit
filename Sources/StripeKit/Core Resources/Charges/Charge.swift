@@ -537,6 +537,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case paypal
     case pix
     case promptpay
+    case samsungPay = "samsung_pay"
     case revolutPay = "revolut_pay"
     case sepaDebit = "sepa_debit"
     case sofort

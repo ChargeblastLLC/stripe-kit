@@ -532,6 +532,7 @@ public enum InvoiceStatus: String, Codable {
     case void
     case paid
     case uncollectible
+    case deleted
 }
 
 public struct InvoiceStatusTransitions: Codable {
