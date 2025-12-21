@@ -164,7 +164,7 @@ public enum ConnectAccountBusinessType: String, Codable {
     case llc
     case corporation
     case soleProp = "sole_prop"
-    case incorporatedPartnership = "incorporated_partnership"
+    case partnership
 }
 
 public struct ConnectAccountCapablities: Codable {
@@ -474,6 +474,7 @@ public enum ConnectAccountCompanyVerificationDocumentDetailsCode: String, Codabl
 }
 
 public enum ConnectAccountCompanyStructure: String, Codable {
+    case incorporatedPartnership = "incorporated_partnership"
     case governmentInstrumentality = "government_instrumentality"
     case governmentalUnit = "governmental_unit"
     case incorporatedNonProfit = "incorporated_non_profit"
