@@ -161,6 +161,8 @@ public enum ConnectAccountBusinessType: String, Codable {
     case company
     case nonProfit = "non_profit"
     case governmentEntity = "government_entity"
+    case llc
+    case corporation
 }
 
 public struct ConnectAccountCapablities: Codable {
