@@ -577,6 +577,7 @@ public struct ConnectAccountRequirementsError: Codable {
 }
 
 public enum ConnectAccountRequirementsErrorCode: String, Codable {
+    case invalidAddressPoBoxesDisallowed = "invalid_address_po_boxes_disallowed"
     case invalidFormat = "invalid_format"
     /// The combination of the city, state, and postal code in the provided address could not be validated.
     case invalidAddressCityStatePostalCode = "invalid_address_city_state_postal_code"
