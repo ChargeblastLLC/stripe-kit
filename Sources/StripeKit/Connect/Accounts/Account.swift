@@ -578,6 +578,8 @@ public struct ConnectAccountRequirementsError: Codable {
 }
 
 public enum ConnectAccountRequirementsErrorCode: String, Codable {
+    case verificationFailedRepresentativeAuthority = "verification_failed_representative_authority"
+    case invalidAddress = "invalid_address"
     case invalidAddressPoBoxesDisallowed = "invalid_address_po_boxes_disallowed"
     case invalidFormat = "invalid_format"
     /// The combination of the city, state, and postal code in the provided address could not be validated.
