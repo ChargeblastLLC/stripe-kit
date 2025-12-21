@@ -163,6 +163,8 @@ public enum ConnectAccountBusinessType: String, Codable {
     case governmentEntity = "government_entity"
     case llc
     case corporation
+    case soleProp = "sole_prop"
+    case incorporatedPartnership = "incorporated_partnership"
 }
 
 public struct ConnectAccountCapablities: Codable {
@@ -574,6 +576,7 @@ public struct ConnectAccountRequirementsError: Codable {
 }
 
 public enum ConnectAccountRequirementsErrorCode: String, Codable {
+    case invalidFormat = "invalid_format"
     /// The combination of the city, state, and postal code in the provided address could not be validated.
     case invalidAddressCityStatePostalCode = "invalid_address_city_state_postal_code"
     /// The street name and/or number for the provided address could not be validated.
