@@ -474,6 +474,7 @@ public enum ConnectAccountCompanyVerificationDocumentDetailsCode: String, Codabl
 }
 
 public enum ConnectAccountCompanyStructure: String, Codable {
+    case unincorporatedPartnership = "unincorporated_partnership"
     case incorporatedPartnership = "incorporated_partnership"
     case governmentInstrumentality = "government_instrumentality"
     case governmentalUnit = "governmental_unit"
