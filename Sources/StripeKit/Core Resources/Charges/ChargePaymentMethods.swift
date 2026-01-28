@@ -257,6 +257,10 @@ public struct ChargePaymentMethodDetailsCard: Codable {
     public var network: PaymentMethodCardNetwork?
     /// Populated if this transaction used 3D Secure authentication.
     public var threeDSecure: ChargePaymentMethodDetailsCardThreeDSecure?
+    
+    /// The network transaction id
+    public var networkTransactionId: String?
+
     /// If this Card is part of a card wallet, this contains the details of the card wallet.
     public var wallet: ChargePaymentMethodDetailsCardWallet?
     /// The issuer identification number for the card. This is the first six digits of a card number.
@@ -281,7 +285,9 @@ public struct ChargePaymentMethodDetailsCard: Codable {
                 wallet: ChargePaymentMethodDetailsCardWallet? = nil,
                 iin: String? = nil,
                 issuer: String? = nil,
-                authorizationCode: String? = nil) {
+                authorizationCode: String? = nil,
+                networkTransactionId: String? = nil) {
+        self.networkTransactionId = networkTransactionId
         self.brand = brand
         self.authorizationCode = authorizationCode
         self.captureBefore = captureBefore
