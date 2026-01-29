@@ -132,6 +132,15 @@ public enum TaxIDType: String, Codable {
     case hrOib = "hr_oib"
     case aoTin = "ao_tin"
     case alTin = "al_tin"
+    case plNip = "pl_nip"
+    case cmNiu = "cm_niu"
+    case tzVat = "tz_vat"
+    case snNinea = "sn_ninea"
+    case awTin = "aw_tin"
+    case gnNif = "gn_nif"
+    case bdBin = "bd_bin"
+    case znTin = "zm_tin"
+    case mrNif = "mr_nif"
     case unknown
 }
 

@@ -68,6 +68,8 @@ public enum StripeErrorCode: String, Codable {
     case accountInvalid = "account_invalid"
     /// The bank account number provided is invalid (e.g., missing digits). Bank account information varies from country to country. We recommend creating validations in your entry forms based on the bank account formats we provide.
     case accountNumberInvalid = "account_number_invalid"
+    
+    case invoiceNoPaymenMethodTypes = "invoice_no_payment_method_types"
     /// This method for creating Alipay payments is not supported anymore. Please upgrade your integration to use Sources instead.
     case alipayUpgradeRequired = "alipay_upgrade_required"
     /// The specified amount is greater than the maximum amount allowed. Use a lower amount and try again.

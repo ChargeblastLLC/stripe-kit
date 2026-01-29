@@ -145,5 +145,6 @@ public enum Currency: String, Codable, CaseIterable {
     case yer
     case zar
     case zmw
+    case xcg
     // TODO: - finish adding stripe currecies
 }
