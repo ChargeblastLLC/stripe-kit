@@ -558,6 +558,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case satispay
     case payByBank = "pay_by_bank"
     case mbWay = "mb_way"
+    case gopay
 }
 
 public struct ChrageRadarOptions: Codable {
