@@ -79,7 +79,8 @@ public struct Dispute: Codable {
 }
 
 public struct DisputeEvidenceDetails: Codable {
-    /// Date by which evidence must be submitted in order to successfully challenge dispute. Will be null if the customer’s bank or credit card company doesn’t allow a response for this particular dispute.
+    /// Date by which evidence must be submitted in order to successfully challenge dispute.
+    /// Stripe may return `0` when no deadline applies — that is normalized to `nil`.
     public var dueBy: Date?
     /// Whether evidence has been staged for this dispute.
     public var hasEvidence: Bool?
@@ -92,10 +93,47 @@ public struct DisputeEvidenceDetails: Codable {
                 hasEvidence: Bool? = nil,
                 pastDue: Bool? = nil,
                 submissionCount: Int? = nil) {
-        self.dueBy = dueBy
+        self.dueBy = Self.normalizedDueBy(dueBy)
         self.hasEvidence = hasEvidence
         self.pastDue = pastDue
         self.submissionCount = submissionCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Decode as epoch seconds so `due_by: 0` can be treated as "no deadline"
+        // (JSONDecoder's `.secondsSince1970` would otherwise yield 1970-01-01).
+        if let epoch = try container.decodeIfPresent(Double.self, forKey: .dueBy), epoch > 0 {
+            dueBy = Date(timeIntervalSince1970: epoch)
+        } else {
+            dueBy = nil
+        }
+        hasEvidence = try container.decodeIfPresent(Bool.self, forKey: .hasEvidence)
+        pastDue = try container.decodeIfPresent(Bool.self, forKey: .pastDue)
+        submissionCount = try container.decodeIfPresent(Int.self, forKey: .submissionCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        if let dueBy {
+            try container.encode(dueBy.timeIntervalSince1970, forKey: .dueBy)
+        }
+        try container.encodeIfPresent(hasEvidence, forKey: .hasEvidence)
+        try container.encodeIfPresent(pastDue, forKey: .pastDue)
+        try container.encodeIfPresent(submissionCount, forKey: .submissionCount)
+    }
+
+    /// Stripe sends `due_by: 0` when evidence is not accepted / no deadline — treat as nil.
+    public static func normalizedDueBy(_ date: Date?) -> Date? {
+        guard let date, date.timeIntervalSince1970 > 0 else { return nil }
+        return date
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case dueBy
+        case hasEvidence
+        case pastDue
+        case submissionCount
     }
 }
 
