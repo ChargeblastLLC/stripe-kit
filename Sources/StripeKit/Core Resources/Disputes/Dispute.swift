@@ -40,6 +40,8 @@ public struct Dispute: Codable {
     public var isChargeRefundable: Bool?
     /// Has the value `true` if the object exists in live mode or the value `false` if the object exists in test mode.
     public var livemode: Bool?
+    /// Additional dispute details specific to the payment method type.
+    public var paymentMethodDetails: DisputePaymentMethodDetails?
     
     public init(id: String,
                 amount: Int? = nil,
@@ -55,7 +57,8 @@ public struct Dispute: Codable {
                 created: Date,
                 evidenceDetails: DisputeEvidenceDetails? = nil,
                 isChargeRefundable: Bool? = nil,
-                livemode: Bool? = nil) {
+                livemode: Bool? = nil,
+                paymentMethodDetails: DisputePaymentMethodDetails? = nil) {
         self.id = id
         self.amount = amount
         self._charge = Expandable(id: charge)
@@ -71,6 +74,7 @@ public struct Dispute: Codable {
         self.evidenceDetails = evidenceDetails
         self.isChargeRefundable = isChargeRefundable
         self.livemode = livemode
+        self.paymentMethodDetails = paymentMethodDetails
     }
 }
 
@@ -93,6 +97,106 @@ public struct DisputeEvidenceDetails: Codable {
         self.pastDue = pastDue
         self.submissionCount = submissionCount
     }
+}
+
+/// Additional dispute information specific to the payment method type.
+/// See [payment_method_details](https://docs.stripe.com/api/disputes/object#dispute_object-payment_method_details).
+public struct DisputePaymentMethodDetails: Codable {
+    /// Card-specific dispute details.
+    public var card: DisputePaymentMethodDetailsCard?
+    /// Amazon Pay specific dispute details.
+    public var amazonPay: DisputePaymentMethodDetailsAmazonPay?
+    /// Klarna specific dispute details.
+    public var klarna: DisputePaymentMethodDetailsKlarna?
+    /// PayPal specific dispute details.
+    public var paypal: DisputePaymentMethodDetailsPaypal?
+    /// Payment method type.
+    public var type: DisputePaymentMethodDetailsType?
+    
+    public init(card: DisputePaymentMethodDetailsCard? = nil,
+                amazonPay: DisputePaymentMethodDetailsAmazonPay? = nil,
+                klarna: DisputePaymentMethodDetailsKlarna? = nil,
+                paypal: DisputePaymentMethodDetailsPaypal? = nil,
+                type: DisputePaymentMethodDetailsType? = nil) {
+        self.card = card
+        self.amazonPay = amazonPay
+        self.klarna = klarna
+        self.paypal = paypal
+        self.type = type
+    }
+}
+
+public struct DisputePaymentMethodDetailsCard: Codable {
+    /// Card brand. Can be `amex`, `cartes_bancaires`, `diners`, `discover`, `eftpos_au`, `jcb`, `link`, `mastercard`, `unionpay`, `visa` or `unknown`.
+    public var brand: String?
+    /// The type of dispute opened. Possible values are `block`, `chargeback`, `compliance`, `inquiry`, or `resolution`.
+    public var caseType: DisputeCardCaseType?
+    /// The card network’s specific dispute reason code.
+    public var networkReasonCode: String?
+    
+    public init(brand: String? = nil,
+                caseType: DisputeCardCaseType? = nil,
+                networkReasonCode: String? = nil) {
+        self.brand = brand
+        self.caseType = caseType
+        self.networkReasonCode = networkReasonCode
+    }
+}
+
+/// Card dispute case type (`payment_method_details.card.case_type`).
+public enum DisputeCardCaseType: String, Codable {
+    /// A dispute opened by a cardholder that the card network blocked before it could become a chargeback.
+    case block
+    /// The action taken by a cardholder’s bank to debit a business’s account in response to a dispute from the cardholder.
+    case chargeback
+    /// An action taken by the card network when they believe the merchant does not conform to network rules.
+    case compliance
+    /// A pre-dispute request from a card issuer (also called retrievals / RFIs). May escalate to a chargeback.
+    case inquiry
+    /// A dispute opened by a cardholder that was resolved (refunded) before it could become a chargeback.
+    case resolution
+}
+
+public struct DisputePaymentMethodDetailsAmazonPay: Codable {
+    /// The Amazon Pay dispute type, `chargeback` or `claim`.
+    public var disputeType: String?
+    
+    public init(disputeType: String? = nil) {
+        self.disputeType = disputeType
+    }
+}
+
+public struct DisputePaymentMethodDetailsKlarna: Codable {
+    /// Chargeback loss reason mapped by Stripe from Klarna’s chargeback loss reason.
+    public var chargebackLossReasonCode: String?
+    /// The reason for the dispute as defined by Klarna.
+    public var reasonCode: String?
+    
+    public init(chargebackLossReasonCode: String? = nil,
+                reasonCode: String? = nil) {
+        self.chargebackLossReasonCode = chargebackLossReasonCode
+        self.reasonCode = reasonCode
+    }
+}
+
+public struct DisputePaymentMethodDetailsPaypal: Codable {
+    /// The ID of the dispute in PayPal.
+    public var caseId: String?
+    /// The reason for the dispute as defined by PayPal.
+    public var reasonCode: String?
+    
+    public init(caseId: String? = nil,
+                reasonCode: String? = nil) {
+        self.caseId = caseId
+        self.reasonCode = reasonCode
+    }
+}
+
+public enum DisputePaymentMethodDetailsType: String, Codable {
+    case card
+    case amazonPay = "amazon_pay"
+    case klarna
+    case paypal
 }
 
 public enum DisputeReason: String, Codable {
