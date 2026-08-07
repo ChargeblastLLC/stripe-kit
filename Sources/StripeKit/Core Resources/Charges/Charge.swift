@@ -561,6 +561,7 @@ public enum ChargePaymentMethodDetailsType: String, Codable {
     case gopay
     case payco
     case upi
+    case sunbit
 }
 
 public struct ChrageRadarOptions: Codable {
