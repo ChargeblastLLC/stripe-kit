@@ -1,28 +1,33 @@
 import Foundation
 
-/// Decodes a Stripe enum value this package does not map as `nil` rather than throwing, so one
-/// unrecognised value cannot abort the page around it.
-///
-/// Stripe adds enum values without warning. The synthesized `Codable` conformance of a
-/// `String`-backed enum throws `DecodingError.dataCorrupted` on anything it does not know, and
-/// because the failure surfaces while decoding a list response it takes the whole page with it,
-/// not just the record that carried the value.
-///
-/// The deliberate leniencies, and their limits:
-///
-/// - Only `dataCorrupted` is caught, and only when the value really is a string. A `typeMismatch`
-///   means Stripe changed a field's type, which is a schema break rather than a new value, and it
-///   still throws.
-/// - A page that loses **every** record still throws. Returning an empty page would read as
-///   success to a caller that stops paginating on an empty result, turning a loud failure into a
-///   silently truncated sync.
-/// - `Currency` keeps its raw value through an `unrecognized(String)` case. Every other enum
-///   discards the unmapped string, which is safe because a nil enum already means "not one we
-///   act on", while a nil currency would let a caller substitute a default and relabel money.
-///
-/// Skipping a record is data loss, so a consumer must install ``StripeDecodingDiagnostics/handler``
-/// and report what it hears. The handler is `nil` by default and the reports are dropped until
-/// one is installed.
+// Decodes a Stripe enum value this package does not map as `nil` rather than throwing, so one
+// unrecognised value cannot abort the page around it.
+//
+// Stripe adds enum values without warning. The synthesized `Codable` conformance of a
+// `String`-backed enum throws `DecodingError.dataCorrupted` on anything it does not know, and
+// because the failure surfaces while decoding a list response it takes the whole page with it,
+// not just the record that carried the value.
+//
+// The deliberate leniencies, and their limits:
+//
+// - When decoding an enum value, only `dataCorrupted` is caught, and only when the value really
+//   is a string. A `typeMismatch` there means Stripe changed a field's type, which is a schema
+//   break rather than a new value, and it still throws.
+// - At the page level the rule is deliberately wider: `LossyList` drops a record that fails for
+//   any reason, so a schema break confined to some records costs those records, not the page.
+// - A page that loses every record still throws. Returning an empty page would read as success
+//   to a caller that stops paginating on an empty result, turning a loud failure into a silently
+//   truncated sync.
+// - `Currency` keeps its raw value through an `unrecognized(String)` case. Every other enum
+//   discards the unmapped string, which is safe because a nil enum already means "not one we act
+//   on", while a nil currency would let a caller substitute a default and relabel money.
+// - The tolerance overloads are deliberately `internal`. They are more constrained than the
+//   stdlib's, so a `public` one would win overload resolution inside an importing module's own
+//   synthesized conformances and make that module's unrelated enums silently lenient too.
+//
+// Skipping a record is data loss, so a consumer must install `StripeDecodingDiagnostics.handler`
+// and report what it hears. The handler is `nil` by default and the reports are dropped until one
+// is installed.
 
 private struct LossyListIndexKey: CodingKey {
     private let index: Int
@@ -93,7 +98,7 @@ public enum StripeDecodingDiagnostics {
 }
 
 extension KeyedDecodingContainer {
-    public func decodeIfPresent<T>(_ type: T.Type, forKey key: Key) throws -> T?
+    func decodeIfPresent<T>(_ type: T.Type, forKey key: Key) throws -> T?
     where T: RawRepresentable & Decodable, T.RawValue == String {
         guard contains(key), try !decodeNil(forKey: key) else { return nil }
 
@@ -117,7 +122,7 @@ extension KeyedDecodingContainer {
 }
 
 extension KeyedDecodingContainer {
-    public func decodeIfPresent<T>(_ type: [T].Type, forKey key: Key) throws -> [T]?
+    func decodeIfPresent<T>(_ type: [T].Type, forKey key: Key) throws -> [T]?
     where T: RawRepresentable & Decodable, T.RawValue == String {
         guard contains(key), try !decodeNil(forKey: key) else { return nil }
 

@@ -3,8 +3,8 @@ import XCTest
 @testable import StripeKit
 
 private final class ReportCollector: @unchecked Sendable {
-    private let lock = NSLock()
-    private var storage: [StripeDecodingReport] = []
+    fileprivate let lock = NSLock()
+    fileprivate var storage: [StripeDecodingReport] = []
 
     var all: [StripeDecodingReport] {
         lock.lock()
@@ -12,12 +12,18 @@ private final class ReportCollector: @unchecked Sendable {
         return storage
     }
 
-    func install() {
-        StripeDecodingDiagnostics.handler = { [self] report in
-            lock.lock()
-            defer { lock.unlock() }
-            storage.append(report)
+    static func installed() -> ReportCollector {
+        let collector = ReportCollector()
+        StripeDecodingDiagnostics.handler = { [collector] report in
+            collector.lock.lock()
+            defer { collector.lock.unlock() }
+            collector.storage.append(report)
         }
+        return collector
+    }
+
+    func uninstall() {
+        StripeDecodingDiagnostics.handler = nil
     }
 }
 
@@ -194,9 +200,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testUnknownEnumValueIsReportedWithItsRawValueAndPath() throws {
-        let collector = ReportCollector()
-        collector.install()
-        defer { StripeDecodingDiagnostics.handler = nil }
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
 
         _ = try decodePage(middleRecord: """
         {
@@ -219,9 +224,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testDroppedRecordIsReportedRatherThanSilentlyLost() throws {
-        let collector = ReportCollector()
-        collector.install()
-        defer { StripeDecodingDiagnostics.handler = nil }
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
 
         _ = try decodePage(middleRecord: """
         { "id": 12345, "object": "charge", "created": 1757404801 }
@@ -235,9 +239,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testPageWithNoUnknownValuesReportsNothing() throws {
-        let collector = ReportCollector()
-        collector.install()
-        defer { StripeDecodingDiagnostics.handler = nil }
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
 
         let list = try decodePage(middleRecord: """
         {
@@ -285,8 +288,11 @@ final class UnknownEnumToleranceTests: XCTestCase {
                   case .typeMismatch(_, let context) = decoding else {
                 return XCTFail("expected the failing element's own DecodingError, got \(error)")
             }
-            XCTAssertEqual(context.codingPath.map(\.stringValue), ["data", "Index 0", "id"],
-                           "the rethrown error must still name the record and field that failed")
+            XCTAssertEqual(context.codingPath.first?.stringValue, "data")
+            XCTAssertEqual(context.codingPath.dropFirst().first?.intValue, 0,
+                           "the rethrown error must still name which record failed")
+            XCTAssertEqual(context.codingPath.last?.stringValue, "id",
+                           "and which field on it")
         }
     }
 
@@ -312,9 +318,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testUnknownValueInAnEnumArrayIsReportedWithItsIndex() throws {
-        let collector = ReportCollector()
-        collector.install()
-        defer { StripeDecodingDiagnostics.handler = nil }
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
 
         let json = #"{"payment_method_types":["card","some_future_method"]}"#.data(using: .utf8)!
         _ = try stripeDecoder().decode(SubscriptionPaymentSettings.self, from: json)
@@ -340,9 +345,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testUnknownCurrencyInAnEnumArrayIsReported() throws {
-        let collector = ReportCollector()
-        collector.install()
-        defer { StripeDecodingDiagnostics.handler = nil }
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
 
         let json = #"{"id":"US","object":"country_spec","supported_payment_currencies":["usd","xbt","eur"]}"#
             .data(using: .utf8)!
