@@ -41,7 +41,6 @@ final class UnknownEnumToleranceTests: XCTestCase {
         try stripeDecoder().decode(ChargeList.self, from: chargePage(middleRecord: middleRecord))
     }
 
-    // Production path: DecodingError(dataCorrupted) at data.Index N.paymentMethodDetails.type
     func testUnknownPaymentMethodTypeDoesNotAbortThePage() throws {
         let list = try decodePage(middleRecord: """
         {
@@ -63,7 +62,6 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertEqual(data[2].paymentMethodDetails?.card?.brand, .amex)
     }
 
-    // Production path: DecodingError(dataCorrupted) at data.Index N.paymentMethodDetails.card.brand (SOL-7 "elo")
     func testUnknownCardBrandDoesNotAbortThePage() throws {
         let list = try decodePage(middleRecord: """
         {
@@ -83,7 +81,6 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertNil(data[1].paymentMethodDetails?.card?.brand)
     }
 
-    // Production path: DecodingError(dataCorrupted) at data.Index N.paymentMethodDetails.cardPresent.receipt.accountType
     func testUnknownCardPresentReceiptAccountTypeDoesNotAbortThePage() throws {
         let list = try decodePage(middleRecord: """
         {
@@ -103,7 +100,6 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertNil(data[1].paymentMethodDetails?.cardPresent?.receipt?.accountType)
     }
 
-    // Currency is money, so the raw value must survive onto the record, not decode to nil.
     func testUnknownCurrencyPreservesItsRawValue() throws {
         let list = try decodePage(middleRecord: """
         {
@@ -139,6 +135,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
             XCTAssertFalse(raw.isEmpty, "\(currency) has an empty raw value")
             XCTAssertEqual(Currency(rawValue: raw), currency,
                            "\(currency) does not survive a rawValue round trip")
+            XCTAssertEqual(String(describing: currency), raw,
+                           "\(currency) raw value drifted from its case name, which was the ISO code")
 
             if case .unrecognized = currency {
                 XCTFail("allCases must not contain the unrecognized case")
@@ -160,7 +158,6 @@ final class UnknownEnumToleranceTests: XCTestCase {
                        "an unmapped code re-encodes verbatim, so a round trip is lossless")
     }
 
-    // A record that fails for a NON-enum reason must not abort the rest of the page either.
     func testStructurallyBrokenRecordDoesNotAbortThePage() throws {
         let list = try decodePage(middleRecord: """
         {
@@ -218,7 +215,9 @@ final class UnknownEnumToleranceTests: XCTestCase {
             return false
         })
         XCTAssertEqual(dropped.typeName, "Charge")
-        XCTAssertNotNil(dropped.underlyingError, "a dropped record must carry why it was dropped")
+        XCTAssertEqual(dropped.codingPath, "data.Index 1",
+                       "the report must name which record was dropped, not only the array")
+        XCTAssertNotNil(dropped.failureDescription, "a dropped record must carry why it was dropped")
     }
 
     func testPageWithNoUnknownValuesReportsNothing() throws {
@@ -251,5 +250,69 @@ final class UnknownEnumToleranceTests: XCTestCase {
         )
         XCTAssertFalse(asObject.keys.contains("data"),
                        "a nil page array is omitted, not encoded as null")
+    }
+
+    func testPageWhereEveryRecordFailsStaysLoud() {
+        let json = """
+        {
+          "object": "list",
+          "has_more": true,
+          "data": [
+            { "id": 1, "object": "charge", "created": 1757404800 },
+            { "id": 2, "object": "charge", "created": 1757404801 }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        XCTAssertThrowsError(try stripeDecoder().decode(ChargeList.self, from: json),
+                             "a total loss must not be reported as an empty but successful page")
+    }
+
+    func testGenuinelyEmptyPageIsNotTreatedAsATotalLoss() throws {
+        let json = #"{"object":"list","has_more":false,"data":[]}"#.data(using: .utf8)!
+        let list = try stripeDecoder().decode(ChargeList.self, from: json)
+        XCTAssertEqual(try XCTUnwrap(list.data).count, 0)
+    }
+
+    func testSurvivingRecordKeepsAPageWithOtherTotalFailures() throws {
+        let list = try decodePage(middleRecord: #"{ "id": 99, "object": "charge", "created": 1 }"#)
+        XCTAssertEqual(try XCTUnwrap(list.data).count, 2, "one good record is enough to keep the page")
+    }
+
+    func testUnknownValueInAnEnumArrayDropsOnlyThatValue() throws {
+        let json = #"{"payment_method_types":["card","some_future_method","link"]}"#
+            .data(using: .utf8)!
+
+        let settings = try stripeDecoder().decode(SubscriptionPaymentSettings.self, from: json)
+        XCTAssertEqual(settings.paymentMethodTypes, [.card, .link],
+                       "only the unmapped entry is dropped, the order of the rest is kept")
+    }
+
+    func testUnknownValueInAnEnumArrayIsReportedWithItsIndex() throws {
+        var reports: [StripeDecodingReport] = []
+        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        defer { StripeDecodingDiagnostics.handler = nil }
+
+        let json = #"{"payment_method_types":["card","some_future_method"]}"#.data(using: .utf8)!
+        _ = try stripeDecoder().decode(SubscriptionPaymentSettings.self, from: json)
+
+        let report = try XCTUnwrap(reports.first { $0.typeName == "PaymentMethodType" })
+        XCTAssertEqual(report.rawValue, "some_future_method")
+        XCTAssertEqual(report.codingPath, "paymentMethodTypes.Index 1")
+    }
+
+    func testUnknownCheckoutTaxIdTypeDoesNotDropTheRecord() throws {
+        let json = """
+        {
+          "email": "buyer@example.com",
+          "tax_ids": [{ "type": "some_future_tax_id", "value": "123" }]
+        }
+        """.data(using: .utf8)!
+
+        let details = try stripeDecoder().decode(SessionCustomerDetails.self, from: json)
+        let taxIds = try XCTUnwrap(details.taxIds)
+        XCTAssertEqual(taxIds.count, 1, "the tax id row survives an unmapped type")
+        XCTAssertNil(taxIds[0].type)
+        XCTAssertEqual(taxIds[0].value, "123")
     }
 }

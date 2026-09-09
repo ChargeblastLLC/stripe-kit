@@ -564,7 +564,7 @@ public struct SessionCustomerDetails: Codable {
 
 public struct SessionCustomerDetailsTaxId: Codable {
     /// The type of the tax ID.
-    public var type: TaxIDType
+    public var type: TaxIDType?
     /// The value of the tax ID.
     public var value: String?
     

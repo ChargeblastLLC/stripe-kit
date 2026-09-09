@@ -1,7 +1,16 @@
 import Foundation
 
-public struct StripeDecodingReport {
-    public enum Outcome {
+private struct LossyListIndexKey: CodingKey {
+    let intValue: Int?
+    var stringValue: String { "Index \(intValue ?? -1)" }
+
+    init(_ index: Int) { intValue = index }
+    init?(intValue: Int) { self.intValue = intValue }
+    init?(stringValue: String) { nil }
+}
+
+public struct StripeDecodingReport: Sendable {
+    public enum Outcome: Sendable {
         case unknownValueDecodedAsNil
         case unknownValueRawPreserved
         case recordDropped
@@ -11,7 +20,7 @@ public struct StripeDecodingReport {
     public let rawValue: String?
     public let codingPath: String
     public let outcome: Outcome
-    public let underlyingError: Error?
+    public let failureDescription: String?
 
     init(typeName: String,
          rawValue: String? = nil,
@@ -22,15 +31,15 @@ public struct StripeDecodingReport {
         self.rawValue = rawValue
         self.codingPath = codingPath.map(\.stringValue).joined(separator: ".")
         self.outcome = outcome
-        self.underlyingError = underlyingError
+        self.failureDescription = underlyingError.map { String(describing: $0) }
     }
 }
 
 public enum StripeDecodingDiagnostics {
     private static let lock = NSLock()
-    private static var _handler: ((StripeDecodingReport) -> Void)?
+    private static var _handler: (@Sendable (StripeDecodingReport) -> Void)?
 
-    public static var handler: ((StripeDecodingReport) -> Void)? {
+    public static var handler: (@Sendable (StripeDecodingReport) -> Void)? {
         get {
             lock.lock()
             defer { lock.unlock() }
@@ -55,9 +64,10 @@ extension KeyedDecodingContainer {
 
         do {
             return try decode(T.self, forKey: key)
-        } catch DecodingError.dataCorrupted(let context) {
-            guard let raw = try? decode(String.self, forKey: key) else {
-                throw DecodingError.dataCorrupted(context)
+        } catch let error as DecodingError {
+            guard case .dataCorrupted = error,
+                  let raw = try? decode(String.self, forKey: key) else {
+                throw error
             }
 
             StripeDecodingDiagnostics.report(
@@ -68,6 +78,36 @@ extension KeyedDecodingContainer {
             )
             return nil
         }
+    }
+}
+
+extension KeyedDecodingContainer {
+    public func decodeIfPresent<T>(_ type: [T].Type, forKey key: Key) throws -> [T]?
+    where T: RawRepresentable & Decodable, T.RawValue == String {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        var nested = try nestedUnkeyedContainer(forKey: key)
+        var values: [T] = []
+        values.reserveCapacity(nested.count ?? 0)
+
+        while !nested.isAtEnd {
+            let index = nested.currentIndex
+            let raw = try nested.decode(String.self)
+
+            if let value = T(rawValue: raw) {
+                values.append(value)
+                continue
+            }
+
+            StripeDecodingDiagnostics.report(
+                StripeDecodingReport(typeName: String(describing: T.self),
+                                     rawValue: raw,
+                                     codingPath: nested.codingPath + [LossyListIndexKey(index)],
+                                     outcome: .unknownValueDecodedAsNil)
+            )
+        }
+
+        return values
     }
 }
 
@@ -89,6 +129,9 @@ private struct LossyElement<Wrapped: Decodable>: Decodable {
 @propertyWrapper
 public struct LossyList<Element: Codable>: Codable {
     public var wrappedValue: [Element]?
+    public private(set) var droppedCount = 0
+
+    public var projectedValue: Int { droppedCount }
 
     public init(wrappedValue: [Element]?) {
         self.wrappedValue = wrappedValue
@@ -97,9 +140,12 @@ public struct LossyList<Element: Codable>: Codable {
     public init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
         var elements: [Element] = []
+        var firstFailure: Error?
+        var dropped = 0
         elements.reserveCapacity(container.count ?? 0)
 
         while !container.isAtEnd {
+            let index = container.currentIndex
             let element = try container.decode(LossyElement<Element>.self)
 
             if let value = element.value {
@@ -107,14 +153,24 @@ public struct LossyList<Element: Codable>: Codable {
                 continue
             }
 
+            dropped += 1
+            if firstFailure == nil {
+                firstFailure = element.failure
+            }
+
             StripeDecodingDiagnostics.report(
                 StripeDecodingReport(typeName: String(describing: Element.self),
-                                     codingPath: container.codingPath,
+                                     codingPath: container.codingPath + [LossyListIndexKey(index)],
                                      outcome: .recordDropped,
                                      underlyingError: element.failure)
             )
         }
 
+        if elements.isEmpty, let failure = firstFailure {
+            throw failure
+        }
+
+        droppedCount = dropped
         wrappedValue = elements
     }
 
