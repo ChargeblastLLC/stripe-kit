@@ -568,7 +568,7 @@ public struct SessionCustomerDetailsTaxId: Codable {
     /// The value of the tax ID.
     public var value: String?
     
-    public init(type: TaxIDType, value: String? = nil) {
+    public init(type: TaxIDType? = nil, value: String? = nil) {
         self.type = type
         self.value = value
     }

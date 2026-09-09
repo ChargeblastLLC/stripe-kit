@@ -1,5 +1,25 @@
+import Foundation
 import XCTest
 @testable import StripeKit
+
+private final class ReportCollector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [StripeDecodingReport] = []
+
+    var all: [StripeDecodingReport] {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage
+    }
+
+    func install() {
+        StripeDecodingDiagnostics.handler = { [self] report in
+            lock.lock()
+            defer { lock.unlock() }
+            storage.append(report)
+        }
+    }
+}
 
 final class UnknownEnumToleranceTests: XCTestCase {
 
@@ -170,11 +190,12 @@ final class UnknownEnumToleranceTests: XCTestCase {
         let data = try XCTUnwrap(list.data)
         XCTAssertEqual(data.map(\.id), ["ch_first", "ch_last"],
                        "the undecodable record is dropped, the healthy ones are kept")
+        XCTAssertEqual(list.$data, 1, "the drop must be counted, or a run reports clean while short")
     }
 
     func testUnknownEnumValueIsReportedWithItsRawValueAndPath() throws {
-        var reports: [StripeDecodingReport] = []
-        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        let collector = ReportCollector()
+        collector.install()
         defer { StripeDecodingDiagnostics.handler = nil }
 
         _ = try decodePage(middleRecord: """
@@ -187,33 +208,26 @@ final class UnknownEnumToleranceTests: XCTestCase {
         }
         """)
 
-        let typeReport = try XCTUnwrap(reports.first { $0.typeName == "ChargePaymentMethodDetailsType" })
+        let typeReport = try XCTUnwrap(collector.all.first { $0.typeName == "ChargePaymentMethodDetailsType" })
         XCTAssertEqual(typeReport.rawValue, "some_future_method")
         XCTAssertEqual(typeReport.codingPath, "data.Index 1.paymentMethodDetails.type")
-        guard case .unknownValueDecodedAsNil = typeReport.outcome else {
-            return XCTFail("expected the payment method type to decode as nil")
-        }
+        XCTAssertEqual(typeReport.outcome, .unknownValueDecodedAsNil)
 
-        let currencyReport = try XCTUnwrap(reports.first { $0.typeName == "Currency" })
+        let currencyReport = try XCTUnwrap(collector.all.first { $0.typeName == "Currency" })
         XCTAssertEqual(currencyReport.rawValue, "xbt")
-        guard case .unknownValueRawPreserved = currencyReport.outcome else {
-            return XCTFail("expected the currency raw value to be preserved")
-        }
+        XCTAssertEqual(currencyReport.outcome, .unknownValueRawPreserved)
     }
 
     func testDroppedRecordIsReportedRatherThanSilentlyLost() throws {
-        var reports: [StripeDecodingReport] = []
-        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        let collector = ReportCollector()
+        collector.install()
         defer { StripeDecodingDiagnostics.handler = nil }
 
         _ = try decodePage(middleRecord: """
         { "id": 12345, "object": "charge", "created": 1757404801 }
         """)
 
-        let dropped = try XCTUnwrap(reports.first { report in
-            if case .recordDropped = report.outcome { return true }
-            return false
-        })
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
         XCTAssertEqual(dropped.typeName, "Charge")
         XCTAssertEqual(dropped.codingPath, "data.Index 1",
                        "the report must name which record was dropped, not only the array")
@@ -221,8 +235,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testPageWithNoUnknownValuesReportsNothing() throws {
-        var reports: [StripeDecodingReport] = []
-        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        let collector = ReportCollector()
+        collector.install()
         defer { StripeDecodingDiagnostics.handler = nil }
 
         let list = try decodePage(middleRecord: """
@@ -236,7 +250,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
         """)
 
         XCTAssertEqual(try XCTUnwrap(list.data).count, 3)
-        XCTAssertTrue(reports.isEmpty, "a healthy page must stay silent")
+        XCTAssertEqual(list.$data, 0, "a healthy page drops nothing")
+        XCTAssertTrue(collector.all.isEmpty, "a healthy page must stay silent")
     }
 
     func testAbsentPageDataStaysAbsentThroughARoundTrip() throws {
@@ -265,7 +280,14 @@ final class UnknownEnumToleranceTests: XCTestCase {
         """.data(using: .utf8)!
 
         XCTAssertThrowsError(try stripeDecoder().decode(ChargeList.self, from: json),
-                             "a total loss must not be reported as an empty but successful page")
+                             "a total loss must not be reported as an empty but successful page") { error in
+            guard let decoding = error as? DecodingError,
+                  case .typeMismatch(_, let context) = decoding else {
+                return XCTFail("expected the failing element's own DecodingError, got \(error)")
+            }
+            XCTAssertEqual(context.codingPath.map(\.stringValue), ["data", "Index 0", "id"],
+                           "the rethrown error must still name the record and field that failed")
+        }
     }
 
     func testGenuinelyEmptyPageIsNotTreatedAsATotalLoss() throws {
@@ -277,6 +299,7 @@ final class UnknownEnumToleranceTests: XCTestCase {
     func testSurvivingRecordKeepsAPageWithOtherTotalFailures() throws {
         let list = try decodePage(middleRecord: #"{ "id": 99, "object": "charge", "created": 1 }"#)
         XCTAssertEqual(try XCTUnwrap(list.data).count, 2, "one good record is enough to keep the page")
+        XCTAssertEqual(list.$data, 1, "the dropped record is counted even though the page survived")
     }
 
     func testUnknownValueInAnEnumArrayDropsOnlyThatValue() throws {
@@ -289,14 +312,14 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testUnknownValueInAnEnumArrayIsReportedWithItsIndex() throws {
-        var reports: [StripeDecodingReport] = []
-        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        let collector = ReportCollector()
+        collector.install()
         defer { StripeDecodingDiagnostics.handler = nil }
 
         let json = #"{"payment_method_types":["card","some_future_method"]}"#.data(using: .utf8)!
         _ = try stripeDecoder().decode(SubscriptionPaymentSettings.self, from: json)
 
-        let report = try XCTUnwrap(reports.first { $0.typeName == "PaymentMethodType" })
+        let report = try XCTUnwrap(collector.all.first { $0.typeName == "PaymentMethodType" })
         XCTAssertEqual(report.rawValue, "some_future_method")
         XCTAssertEqual(report.codingPath, "paymentMethodTypes.Index 1")
     }
@@ -317,8 +340,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 
     func testUnknownCurrencyInAnEnumArrayIsReported() throws {
-        var reports: [StripeDecodingReport] = []
-        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        let collector = ReportCollector()
+        collector.install()
         defer { StripeDecodingDiagnostics.handler = nil }
 
         let json = #"{"id":"US","object":"country_spec","supported_payment_currencies":["usd","xbt","eur"]}"#
@@ -329,11 +352,10 @@ final class UnknownEnumToleranceTests: XCTestCase {
                        [.usd, .unrecognized("xbt"), .eur],
                        "an array element keeps its raw value exactly as a scalar property does")
 
-        let report = try XCTUnwrap(reports.first { $0.typeName == "Currency" })
+        let report = try XCTUnwrap(collector.all.first { $0.typeName == "Currency" })
         XCTAssertEqual(report.rawValue, "xbt")
         XCTAssertEqual(report.codingPath, "supportedPaymentCurrencies.Index 1")
-        guard case .unknownValueRawPreserved = report.outcome else {
-            return XCTFail("an array element must report the same outcome as a scalar property")
-        }
+        XCTAssertEqual(report.outcome, .unknownValueRawPreserved,
+                       "an array element must report the same outcome as a scalar property")
     }
 }

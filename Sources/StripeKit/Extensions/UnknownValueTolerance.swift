@@ -1,16 +1,42 @@
 import Foundation
 
-private struct LossyListIndexKey: CodingKey {
-    let intValue: Int?
-    var stringValue: String { "Index \(intValue ?? -1)" }
+/// Decodes a Stripe enum value this package does not map as `nil` rather than throwing, so one
+/// unrecognised value cannot abort the page around it.
+///
+/// Stripe adds enum values without warning. The synthesized `Codable` conformance of a
+/// `String`-backed enum throws `DecodingError.dataCorrupted` on anything it does not know, and
+/// because the failure surfaces while decoding a list response it takes the whole page with it,
+/// not just the record that carried the value.
+///
+/// The deliberate leniencies, and their limits:
+///
+/// - Only `dataCorrupted` is caught, and only when the value really is a string. A `typeMismatch`
+///   means Stripe changed a field's type, which is a schema break rather than a new value, and it
+///   still throws.
+/// - A page that loses **every** record still throws. Returning an empty page would read as
+///   success to a caller that stops paginating on an empty result, turning a loud failure into a
+///   silently truncated sync.
+/// - `Currency` keeps its raw value through an `unrecognized(String)` case. Every other enum
+///   discards the unmapped string, which is safe because a nil enum already means "not one we
+///   act on", while a nil currency would let a caller substitute a default and relabel money.
+///
+/// Skipping a record is data loss, so a consumer must install ``StripeDecodingDiagnostics/handler``
+/// and report what it hears. The handler is `nil` by default and the reports are dropped until
+/// one is installed.
 
-    init(_ index: Int) { intValue = index }
-    init?(intValue: Int) { self.intValue = intValue }
+private struct LossyListIndexKey: CodingKey {
+    private let index: Int
+
+    var intValue: Int? { index }
+    var stringValue: String { "Index \(index)" }
+
+    init(_ index: Int) { self.index = index }
+    init?(intValue: Int) { index = intValue }
     init?(stringValue: String) { nil }
 }
 
 public struct StripeDecodingReport: Sendable {
-    public enum Outcome: Sendable {
+    public enum Outcome: Sendable, Equatable {
         case unknownValueDecodedAsNil
         case unknownValueRawPreserved
         case recordDropped

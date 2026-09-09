@@ -5,6 +5,19 @@
 
 ### StripeKit is a Swift package used to communicate with the [Stripe](https://stripe.com) API for Server Side Swift Apps.
 
+## Chargeblast fork divergences
+
+This fork is not a mirror. Keep these across an upstream merge; each is deliberate and covered by
+`Tests/StripeKitTests/UnknownEnumToleranceTests.swift`.
+
+| Divergence | Why |
+| -- | -- |
+| `Currency` is `RawRepresentable` with an `unrecognized(String)` case, not `String`-backed | An unmapped ISO code keeps its raw value, so a consumer cannot silently relabel a charge with a default currency |
+| `@LossyList` on the page-level `data` array of every list and search response | One undecodable record can no longer abort the rest of the page. A page that loses every record still throws |
+| Two `KeyedDecodingContainer` tolerance overloads, plus `StripeDecodingDiagnostics` | An unmapped enum value decodes as `nil` and is reported, instead of throwing and stalling the sync stream |
+
+See `Sources/StripeKit/Extensions/UnknownValueTolerance.swift` for the full contract.
+
 ## Version support
 
 Stripe API version `2022-11-15` -> StripeKit: 22.0.0
