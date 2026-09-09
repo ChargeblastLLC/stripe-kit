@@ -35,21 +35,30 @@ public struct StripeDecodingReport: Sendable {
     }
 }
 
-public enum StripeDecodingDiagnostics {
-    private static let lock = NSLock()
-    private static var _handler: (@Sendable (StripeDecodingReport) -> Void)?
+private final class StripeDecodingHandlerBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var handler: (@Sendable (StripeDecodingReport) -> Void)?
 
-    public static var handler: (@Sendable (StripeDecodingReport) -> Void)? {
+    var current: (@Sendable (StripeDecodingReport) -> Void)? {
         get {
             lock.lock()
             defer { lock.unlock() }
-            return _handler
+            return handler
         }
         set {
             lock.lock()
             defer { lock.unlock() }
-            _handler = newValue
+            handler = newValue
         }
+    }
+}
+
+private let stripeDecodingHandlerBox = StripeDecodingHandlerBox()
+
+public enum StripeDecodingDiagnostics {
+    public static var handler: (@Sendable (StripeDecodingReport) -> Void)? {
+        get { stripeDecodingHandlerBox.current }
+        set { stripeDecodingHandlerBox.current = newValue }
     }
 
     static func report(_ report: StripeDecodingReport) {
@@ -92,19 +101,24 @@ extension KeyedDecodingContainer {
 
         while !nested.isAtEnd {
             let index = nested.currentIndex
-            let raw = try nested.decode(String.self)
+            let element = try nested.superDecoder()
 
-            if let value = T(rawValue: raw) {
-                values.append(value)
+            do {
+                values.append(try T(from: element))
                 continue
-            }
+            } catch let error as DecodingError {
+                guard case .dataCorrupted = error,
+                      let raw = try? element.singleValueContainer().decode(String.self) else {
+                    throw error
+                }
 
-            StripeDecodingDiagnostics.report(
-                StripeDecodingReport(typeName: String(describing: T.self),
-                                     rawValue: raw,
-                                     codingPath: nested.codingPath + [LossyListIndexKey(index)],
-                                     outcome: .unknownValueDecodedAsNil)
-            )
+                StripeDecodingDiagnostics.report(
+                    StripeDecodingReport(typeName: String(describing: T.self),
+                                         rawValue: raw,
+                                         codingPath: nested.codingPath + [LossyListIndexKey(index)],
+                                         outcome: .unknownValueDecodedAsNil)
+                )
+            }
         }
 
         return values

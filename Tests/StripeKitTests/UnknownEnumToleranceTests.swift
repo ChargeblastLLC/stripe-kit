@@ -315,4 +315,25 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertNil(taxIds[0].type)
         XCTAssertEqual(taxIds[0].value, "123")
     }
+
+    func testUnknownCurrencyInAnEnumArrayIsReported() throws {
+        var reports: [StripeDecodingReport] = []
+        StripeDecodingDiagnostics.handler = { reports.append($0) }
+        defer { StripeDecodingDiagnostics.handler = nil }
+
+        let json = #"{"id":"US","object":"country_spec","supported_payment_currencies":["usd","xbt","eur"]}"#
+            .data(using: .utf8)!
+        let spec = try stripeDecoder().decode(CountrySpec.self, from: json)
+
+        XCTAssertEqual(spec.supportedPaymentCurrencies,
+                       [.usd, .unrecognized("xbt"), .eur],
+                       "an array element keeps its raw value exactly as a scalar property does")
+
+        let report = try XCTUnwrap(reports.first { $0.typeName == "Currency" })
+        XCTAssertEqual(report.rawValue, "xbt")
+        XCTAssertEqual(report.codingPath, "supportedPaymentCurrencies.Index 1")
+        guard case .unknownValueRawPreserved = report.outcome else {
+            return XCTFail("an array element must report the same outcome as a scalar property")
+        }
+    }
 }

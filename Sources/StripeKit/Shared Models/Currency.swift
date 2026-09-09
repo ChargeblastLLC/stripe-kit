@@ -6,7 +6,7 @@
 //
 //
 
-public enum Currency: RawRepresentable, Codable, Hashable, CaseIterable {
+public enum Currency: RawRepresentable, Codable, Hashable, CaseIterable, Sendable {
     case usd
     case aed
     case afn
