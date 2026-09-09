@@ -107,6 +107,7 @@ public struct ProductSearchResult: Codable {
     /// A string describing the object type returned.
     public var object: String
     /// A list of products, paginated by any request parameters.
+    @LossyList
     public var data: [Product]?
     /// Whether or not there are more elements available after this set.
     public var hasMore: Bool?
@@ -136,6 +137,7 @@ public struct ProductsList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Product]?
     
     public init(object: String,

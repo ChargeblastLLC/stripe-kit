@@ -336,6 +336,7 @@ public struct AuthorizationList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Authorization]?
     
     public init(object: String,

@@ -51,6 +51,7 @@ public struct ReportType: Codable {
 
 public struct ReportTypeList: Codable {
     public var object: String
+    @LossyList
     public var data: [ReportType]?
     public var hasMore: Bool?
     public var url: String?

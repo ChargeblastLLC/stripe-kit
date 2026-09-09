@@ -140,6 +140,7 @@ public struct TerminalConfigurationList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [TerminalConfiguration]?
     
     public init(object: String,

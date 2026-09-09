@@ -59,6 +59,7 @@ public struct EarlyFraudWarningList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [EarlyFraudWarning]?
     
     public init(object: String,

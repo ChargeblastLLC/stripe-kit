@@ -213,6 +213,7 @@ public struct PaymentLinkLineItemList: Codable {
     /// String representing the object’s type. Objects of the same type share the same value. Always has the value `list`.
     public var object: String
     /// Details about each object.
+    @LossyList
     public var data: [PaymentLinkLineItem]?
     /// True if this list has another page of items after this one that can be fetched.
     public var hasMore: Bool?
@@ -627,6 +628,7 @@ public struct PaymentLinkList: Codable {
     /// String representing the object’s type. Objects of the same type share the same value. Always has the value `list`.
     public var object: String
     /// Details about each object.
+    @LossyList
     public var data: [PaymentLink]?
     /// True if this list has another page of items after this one that can be fetched.
     public var hasMore: Bool?

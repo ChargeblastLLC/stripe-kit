@@ -374,6 +374,7 @@ public struct SubscriptionScheduleList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [SubscriptionSchedule]?
     
     public init(object: String,

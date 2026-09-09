@@ -239,6 +239,7 @@ public enum VerificationSessionVerifiedOutputsIdNumberType: String, Codable {
 
 public struct VerificationSessionList: Codable {
     public var object: String
+    @LossyList
     public var data: [VerificationSession]?
     public var hasMore: Bool?
     public var url: String?

@@ -68,6 +68,7 @@ public struct ValueListList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [ValueList]?
     
     public init(object: String,

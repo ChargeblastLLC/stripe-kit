@@ -128,6 +128,7 @@ public struct CapabilitiesList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Capability]?
     
     public init(object: String,

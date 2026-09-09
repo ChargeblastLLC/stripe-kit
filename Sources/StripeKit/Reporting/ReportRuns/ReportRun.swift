@@ -98,6 +98,7 @@ public enum ReportRunStatus: String, Codable {
 
 public struct ReportRunList: Codable {
     public var object: String
+    @LossyList
     public var data: [ReportRun]?
     public var hasMore: Bool?
     public var url: String?

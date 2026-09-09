@@ -250,6 +250,7 @@ public struct TerminalReaderActionSetReaderDisplayCartLineItem: Codable {
 
 public struct TerminalReaderList: Codable {
     public var object: String
+    @LossyList
     public var data: [TerminalReader]?
     public var hasMore: Bool?
     public var url: String?

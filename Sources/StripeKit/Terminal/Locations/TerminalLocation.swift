@@ -43,6 +43,7 @@ public struct TerminalLocation: Codable {
 
 public struct TerminalLocationList: Codable {
     public var object: String
+    @LossyList
     public var data: [TerminalLocation]?
     public var hasMore: Bool?
     public var url: String?

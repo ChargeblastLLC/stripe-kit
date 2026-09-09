@@ -68,6 +68,7 @@ public enum WebhookStatus: String, Codable {
 
 public struct WebhookList: Codable {
     public var object: String
+    @LossyList
     public var data: [Webhook]?
     public var hasMore: Bool?
     public var url: String?

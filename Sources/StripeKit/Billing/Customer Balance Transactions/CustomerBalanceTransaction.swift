@@ -79,6 +79,7 @@ public enum CustomerBalanceTransactionType: String, Codable {
 
 public struct CustomerBalanceTransactionList: Codable {
     public var object: String
+    @LossyList
     public var data: [CustomerBalanceTransaction]?
     public var hasMore: Bool?
     public var url: String?

@@ -90,6 +90,7 @@ public struct TopUpList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [TopUp]?
     
     public init(object: String,

@@ -655,6 +655,7 @@ public struct SessionLineItemList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [SessionLineItem]?
     
     public init(object: String,
@@ -886,6 +887,7 @@ public struct SessionList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Session]?
     
     public init(object: String,

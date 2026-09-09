@@ -104,6 +104,7 @@ public struct FileUploadList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [File]?
     
     public init(object: String,

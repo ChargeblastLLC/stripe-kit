@@ -299,6 +299,7 @@ public struct ChargeList: Codable {
     /// The URL where this list can be accessed.
     public var url: String?
     /// The list of Chrages
+    @LossyList
     public var data: [Charge]?
     
     public init(object: String,
@@ -316,6 +317,7 @@ public struct ChargeSearchResult: Codable {
     /// A string describing the object type returned.
     public var object: String
     /// A list of charges, paginated by any request parameters.
+    @LossyList
     public var data: [Charge]?
     /// Whether or not there are more elements available after this set.
     public var hasMore: Bool?
