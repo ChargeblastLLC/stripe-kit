@@ -3,8 +3,8 @@ import XCTest
 @testable import StripeKit
 
 private final class ReportCollector: @unchecked Sendable {
-    fileprivate let lock = NSLock()
-    fileprivate var storage: [StripeDecodingReport] = []
+    private let lock = NSLock()
+    private var storage: [StripeDecodingReport] = []
 
     var all: [StripeDecodingReport] {
         lock.lock()

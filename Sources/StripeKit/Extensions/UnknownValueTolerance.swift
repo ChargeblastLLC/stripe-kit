@@ -21,9 +21,11 @@ import Foundation
 // - `Currency` keeps its raw value through an `unrecognized(String)` case. Every other enum
 //   discards the unmapped string, which is safe because a nil enum already means "not one we act
 //   on", while a nil currency would let a caller substitute a default and relabel money.
-// - The tolerance overloads are deliberately `internal`. They are more constrained than the
-//   stdlib's, so a `public` one would win overload resolution inside an importing module's own
-//   synthesized conformances and make that module's unrelated enums silently lenient too.
+// - The two `decodeIfPresent` overloads are deliberately `internal`. They are more constrained
+//   than the stdlib's, so a `public` one would win overload resolution inside an importing
+//   module's own synthesized conformances and make that module's unrelated enums silently
+//   lenient too. The `LossyList` container plumbing below stays `public`, because the wrapper is
+//   applied to public properties and is constrained to a type this package owns.
 //
 // Skipping a record is data loss, so a consumer must install `StripeDecodingDiagnostics.handler`
 // and report what it hears. The handler is `nil` by default and the reports are dropped until one
