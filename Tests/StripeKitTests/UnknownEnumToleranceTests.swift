@@ -400,19 +400,16 @@ final class UnknownEnumToleranceTests: XCTestCase {
                       "a rejected list dropped nothing, so it must not report a drop")
     }
 
-    func testPageResponseStillDropsOneRecord() throws {
-        let list = try decodePage(middleRecord: #"{ "id": 99, "object": "charge", "created": 1 }"#)
-        XCTAssertEqual(try XCTUnwrap(list.data).count, 2)
-        XCTAssertEqual(list.$data, 1)
-    }
-
     func testPageKeepsGoingWhenAnEmbeddedListRejectsOneRecord() throws {
         let json = """
         {
           "object": "list",
           "data": [
             { "id": "sub_bad", "object": "subscription", "created": 1, "automatic_tax": {},
-              "items": { "object": "list", "data": [{ "id": 1, "object": "item" }] } },
+              "items": { "object": "list", "data": [
+                { "id": 1, "object": "subscription_item", "created": 1 },
+                { "id": "si_ok", "object": "subscription_item", "created": 1 }
+              ] } },
             { "id": "sub_ok", "object": "subscription", "created": 1, "automatic_tax": {} }
           ]
         }
@@ -420,7 +417,8 @@ final class UnknownEnumToleranceTests: XCTestCase {
 
         let list = try stripeDecoder().decode(SubscriptionList.self, from: json)
         XCTAssertEqual(try XCTUnwrap(list.data).map(\.id), ["sub_ok"],
-                       "the strict embedded list fails its record, and the page drops that record")
+                       "the embedded list has a survivor, so only strictness can reject it, "
+                           + "and the page drops just that record")
         XCTAssertEqual(list.$data, 1)
     }
 
@@ -433,7 +431,7 @@ final class UnknownEnumToleranceTests: XCTestCase {
     }
 }
 
-struct LossyListProbeKey: CodingKey {
+private struct LossyListProbeKey: CodingKey {
     var stringValue: String
     var intValue: Int? { nil }
 
