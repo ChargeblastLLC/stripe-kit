@@ -488,6 +488,16 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertTrue(report.failureCodingPath.isEmpty)
     }
 
+    func testAValueNotFoundDropNamesTheFieldThatWasNull() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: #"{ "id": null, "object": "charge", "created": 1 }"#)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "valueNotFound")
+        XCTAssertEqual(dropped.failureCodingPath.last, "id")
+    }
 }
 
 private struct LossyListProbeKey: CodingKey {
