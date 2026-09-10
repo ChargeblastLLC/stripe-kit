@@ -61,7 +61,9 @@ public struct StripeDecodingReport: Sendable {
     public let outcome: Outcome
     public let failureDescription: String?
     /// Which `DecodingError` case a dropped record failed on, as a stable token
-    /// (`typeMismatch`, `keyNotFound`, `valueNotFound`, `dataCorrupted`).
+    /// (`typeMismatch`, `keyNotFound`, `valueNotFound`, `dataCorrupted`), `unknown` for a case
+    /// this package does not know yet, or `nonDecodingError` when the record failed on something
+    /// that never became a `DecodingError` at all.
     ///
     /// Separate from `failureDescription` because that one is `String(describing:)` of the error,
     /// whose text differs between Darwin Foundation and swift-corelibs-foundation. A consumer that
@@ -87,14 +89,28 @@ public struct StripeDecodingReport: Sendable {
         self.outcome = outcome
         self.failureDescription = underlyingError.map { String(describing: $0) }
 
-        let decoding = underlyingError as? DecodingError
-        self.failureKind = decoding.map(Self.kind)
+        if let underlyingError {
+            let decoding = underlyingError as? DecodingError
 
-        let failurePath = decoding.map(Self.failurePath) ?? []
-        self.failureCodingPath = failurePath.map(\.stringValue)
-        self.failureCodingPathIndices = Set(
-            failurePath.enumerated().compactMap { $0.element.intValue == nil ? nil : $0.offset }
-        )
+            // A record can fail on something that is not a DecodingError at all: JSONDecoder
+            // converts its internal JSONError at the outermost decode boundary, and this catch
+            // sits inside that boundary, so an integer that overflows Int arrives raw. Falling
+            // back to the record's own path keeps the grouping key non-empty, and the kind says
+            // which of the two situations produced it.
+            self.failureKind = decoding.map(Self.kind) ?? "nonDecodingError"
+
+            let failurePath = decoding.map(Self.failurePath) ?? codingPath
+            self.failureCodingPath = failurePath.map(\.stringValue)
+            self.failureCodingPathIndices = Set(
+                failurePath.enumerated()
+                    .filter { $0.element.intValue != nil }
+                    .map(\.offset)
+            )
+        } else {
+            self.failureKind = nil
+            self.failureCodingPath = []
+            self.failureCodingPathIndices = []
+        }
     }
 
     private static func kind(_ error: DecodingError) -> String {

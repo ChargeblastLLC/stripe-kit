@@ -471,7 +471,11 @@ final class UnknownEnumToleranceTests: XCTestCase {
 
         let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
         XCTAssertEqual(dropped.failureKind, "keyNotFound")
-        XCTAssertEqual(dropped.failureCodingPath.last, "created")
+        let keyed = dropped.failureCodingPath.enumerated()
+            .filter { !dropped.failureCodingPathIndices.contains($0.offset) }
+            .map(\.element)
+        XCTAssertEqual(keyed, ["data", "created"],
+                       "the missing key is appended exactly once, to the container's path")
     }
 
     func testAnUnmappedEnumValueCarriesNoFailureStructure() throws {
@@ -498,6 +502,24 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertEqual(dropped.failureKind, "valueNotFound")
         XCTAssertEqual(dropped.failureCodingPath.last, "id")
     }
+
+    func testARecordLostToSomethingOtherThanADecodingErrorStillGroups() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: """
+        { "id": "ch_middle", "object": "charge", "created": 1, "amount": 99999999999999999999 }
+        """)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "nonDecodingError",
+                       "an integer that overflows Int never becomes a DecodingError, because "
+                       + "JSONDecoder only converts its internal error at the outer boundary")
+        XCTAssertFalse(dropped.failureCodingPath.isEmpty,
+                       "so it falls back to the record path rather than handing the consumer an "
+                       + "empty grouping key and pushing it back onto the rendered description")
+    }
+
 }
 
 private struct LossyListProbeKey: CodingKey {
