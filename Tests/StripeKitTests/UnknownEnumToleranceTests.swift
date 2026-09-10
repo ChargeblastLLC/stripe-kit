@@ -362,4 +362,80 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertEqual(report.outcome, .unknownValueRawPreserved,
                        "an array element must report the same outcome as a scalar property")
     }
+
+    func testEmbeddedListRejectsABadRecordRatherThanShorteningItself() throws {
+        let json = """
+        {
+          "id": "cus_1",
+          "object": "customer",
+          "subscriptions": {
+            "object": "list",
+            "data": [
+              { "id": 12345, "object": "subscription" },
+              { "id": "sub_ok", "object": "subscription", "created": 1, "automatic_tax": {} }
+            ]
+          }
+        }
+        """.data(using: .utf8)!
+
+        XCTAssertThrowsError(try stripeDecoder().decode(Customer.self, from: json)) { error in
+            XCTAssertTrue(error is DecodingError,
+                          "a relation the caller reads whole must not silently lose a member")
+        }
+    }
+
+    func testEmbeddedListReportsNothingWhenItRejects() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        let json = """
+        {
+          "id": "cus_1", "object": "customer",
+          "subscriptions": { "object": "list", "data": [{ "id": 12345, "object": "subscription" }] }
+        }
+        """.data(using: .utf8)!
+
+        _ = try? stripeDecoder().decode(Customer.self, from: json)
+        XCTAssertTrue(collector.all.isEmpty,
+                      "a rejected list dropped nothing, so it must not report a drop")
+    }
+
+    func testPageKeepsGoingWhenAnEmbeddedListRejectsOneRecord() throws {
+        let json = """
+        {
+          "object": "list",
+          "data": [
+            { "id": "sub_bad", "object": "subscription", "created": 1, "automatic_tax": {},
+              "items": { "object": "list", "data": [
+                { "id": 1, "object": "subscription_item", "created": 1 },
+                { "id": "si_ok", "object": "subscription_item", "created": 1 }
+              ] } },
+            { "id": "sub_ok", "object": "subscription", "created": 1, "automatic_tax": {} }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        let list = try stripeDecoder().decode(SubscriptionList.self, from: json)
+        XCTAssertEqual(try XCTUnwrap(list.data).map(\.id), ["sub_ok"],
+                       "the embedded list has a survivor, so only strictness can reject it, "
+                           + "and the page drops just that record")
+        XCTAssertEqual(list.$data, 1)
+    }
+
+    func testPageResponseIsRecognisedByItsCodingPathDepth() {
+        XCTAssertTrue(LossyList<Charge>.isPageResponse([LossyListProbeKey("data")]))
+        XCTAssertFalse(LossyList<Charge>.isPageResponse([
+            LossyListProbeKey("subscriptions"), LossyListProbeKey("data"),
+        ]))
+        XCTAssertFalse(LossyList<Charge>.isPageResponse([]))
+    }
+}
+
+private struct LossyListProbeKey: CodingKey {
+    var stringValue: String
+    var intValue: Int? { nil }
+
+    init(_ stringValue: String) { self.stringValue = stringValue }
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) { nil }
 }

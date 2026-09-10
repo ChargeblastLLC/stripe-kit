@@ -15,6 +15,12 @@ import Foundation
 //   break rather than a new value, and it still throws.
 // - At the page level the rule is deliberately wider: `LossyList` drops a record that fails for
 //   any reason, so a schema break confined to some records costs those records, not the page.
+// - That width applies ONLY to a list that IS the response, which is a page a caller iterates.
+//   The same list type nested inside another object is a relation the caller reads whole
+//   (`Customer.subscriptions`, `Subscription.items`), and silently shortening one changes what
+//   the caller decides rather than costing it a page, so a nested list rejects the whole object
+//   instead. Composed, that is the behaviour worth having: a bad item fails its subscription,
+//   and the page around that subscription drops just that record and keeps going.
 // - A page that loses every record still throws. Returning an empty page would read as success
 //   to a caller that stops paginating on an empty result, turning a loud failure into a silently
 //   truncated sync.
@@ -187,8 +193,7 @@ public struct LossyList<Element: Codable>: Codable {
     public init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
         var elements: [Element] = []
-        var firstFailure: Error?
-        var dropped = 0
+        var failures: [(index: Int, error: Error?)] = []
         elements.reserveCapacity(container.count ?? 0)
 
         while !container.isAtEnd {
@@ -200,25 +205,39 @@ public struct LossyList<Element: Codable>: Codable {
                 continue
             }
 
-            dropped += 1
-            if firstFailure == nil {
-                firstFailure = element.failure
-            }
-
-            StripeDecodingDiagnostics.report(
-                StripeDecodingReport(typeName: String(describing: Element.self),
-                                     codingPath: container.codingPath + [LossyListIndexKey(index)],
-                                     outcome: .recordDropped,
-                                     underlyingError: element.failure)
-            )
+            failures.append((index, element.failure))
         }
 
-        if elements.isEmpty, let failure = firstFailure {
+        if let failure = Self.rejection(failures: failures,
+                                        survivors: elements.count,
+                                        codingPath: decoder.codingPath) {
             throw failure
         }
 
-        droppedCount = dropped
+        for failure in failures {
+            StripeDecodingDiagnostics.report(
+                StripeDecodingReport(typeName: String(describing: Element.self),
+                                     codingPath: container.codingPath
+                                         + [LossyListIndexKey(failure.index)],
+                                     outcome: .recordDropped,
+                                     underlyingError: failure.error)
+            )
+        }
+
+        droppedCount = failures.count
         wrappedValue = elements
+    }
+
+    static func rejection(failures: [(index: Int, error: Error?)],
+                          survivors: Int,
+                          codingPath: [CodingKey]) -> Error? {
+        guard let first = failures.first?.error else { return nil }
+        if survivors == 0 { return first }
+        return isPageResponse(codingPath) ? nil : first
+    }
+
+    static func isPageResponse(_ codingPath: [CodingKey]) -> Bool {
+        codingPath.count == 1
     }
 
     public func encode(to encoder: Encoder) throws {
