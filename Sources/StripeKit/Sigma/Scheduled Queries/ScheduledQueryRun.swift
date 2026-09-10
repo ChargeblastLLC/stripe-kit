@@ -59,6 +59,7 @@ public struct ScheduledQueryRun: Codable {
 
 public struct ScheduledQueryRunList: Codable {
     public var object: String
+    @LossyList
     public var data: [ScheduledQueryRun]?
     public var hasMore: Bool?
     public var url: String?

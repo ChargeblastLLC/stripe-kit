@@ -149,6 +149,7 @@ public struct CashBalanceTransactionList: Codable {
     /// String representing the object’s type. Objects of the same type share the same value. Always has the value list.
     public var object: String
     /// An array of `CashBalanceTransaction`s associated with the account.
+    @LossyList
     public var data: [CashBalanceTransaction]?
     /// True if this list has another page of items after this one that can be fetched.
     public var hasMore: Bool?

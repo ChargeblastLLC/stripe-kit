@@ -564,11 +564,11 @@ public struct SessionCustomerDetails: Codable {
 
 public struct SessionCustomerDetailsTaxId: Codable {
     /// The type of the tax ID.
-    public var type: TaxIDType
+    public var type: TaxIDType?
     /// The value of the tax ID.
     public var value: String?
     
-    public init(type: TaxIDType, value: String? = nil) {
+    public init(type: TaxIDType? = nil, value: String? = nil) {
         self.type = type
         self.value = value
     }
@@ -655,6 +655,7 @@ public struct SessionLineItemList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [SessionLineItem]?
     
     public init(object: String,
@@ -886,6 +887,7 @@ public struct SessionList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Session]?
     
     public init(object: String,

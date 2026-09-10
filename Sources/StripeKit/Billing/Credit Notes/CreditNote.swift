@@ -194,6 +194,7 @@ public enum CreditNoteType: String, Codable {
 
 public struct CreditNoteList: Codable {
     public var object: String
+    @LossyList
     public var data: [CreditNote]?
     public var hasMore: Bool?
     public var url: String?

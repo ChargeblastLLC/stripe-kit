@@ -221,6 +221,7 @@ public struct TerminalHardwareOrderList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [TerminalHardwareOrder]?
     
     public init(object: String,

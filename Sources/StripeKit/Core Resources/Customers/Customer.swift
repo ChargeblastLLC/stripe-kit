@@ -213,6 +213,7 @@ public struct CustomerList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [Customer]?
     
     public init(object: String,
@@ -230,6 +231,7 @@ public struct CustomerSearchResult: Codable {
     /// A string describing the object type returned.
     public var object: String
     /// A list of customers, paginated by any request parameters.
+    @LossyList
     public var data: [Customer]?
     /// Whether or not there are more elements available after this set.
     public var hasMore: Bool?

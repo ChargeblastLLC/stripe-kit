@@ -323,6 +323,7 @@ public enum VerificationReportType: String, Codable {
 
 public struct VerificationReportList: Codable {
     public var object: String
+    @LossyList
     public var data: [VerificationReport]?
     public var hasMore: Bool?
     public var url: String?

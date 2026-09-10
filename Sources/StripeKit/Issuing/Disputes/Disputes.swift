@@ -61,6 +61,7 @@ public struct IssuingDisputeList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [IssuingDispute]?
     
     public init(object: String,

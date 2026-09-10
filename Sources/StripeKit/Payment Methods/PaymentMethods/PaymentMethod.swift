@@ -219,6 +219,7 @@ public struct PaymentMethodRadarOptions: Codable {
 
 public struct PaymentMethodList: Codable {
     public var object: String
+    @LossyList
     public var data: [PaymentMethod]?
     public var hasMore: Bool?
     public var url: String?

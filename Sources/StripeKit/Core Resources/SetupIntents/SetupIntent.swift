@@ -237,5 +237,6 @@ public struct SetupIntentsList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [SetupIntent]?
 }

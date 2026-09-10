@@ -81,6 +81,7 @@ public struct SubscriptionItemList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [SubscriptionItem]?
     
     public init(object: String,

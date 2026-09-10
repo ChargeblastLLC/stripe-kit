@@ -106,6 +106,7 @@ public struct ConnectAccountList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [ConnectAccount]?
     
     public init(object: String,

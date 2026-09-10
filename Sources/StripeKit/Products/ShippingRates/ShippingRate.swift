@@ -143,6 +143,7 @@ public struct ShippingRateList: Codable {
     public var object: String
     public var hasMore: Bool?
     public var url: String?
+    @LossyList
     public var data: [ShippingRate]?
     
     public init(object: String,

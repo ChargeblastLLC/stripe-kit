@@ -57,6 +57,7 @@ public struct TestClockList: Codable {
     /// A string describing the object type returned.
     public var object: String
     /// A list of Test Clocks, paginated by any request parameters.
+    @LossyList
     public var data: [TestClock]?
     /// Whether or not there are more elements available after this set.
     public var hasMore: Bool?

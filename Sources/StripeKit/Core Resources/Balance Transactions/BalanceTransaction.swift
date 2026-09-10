@@ -150,6 +150,7 @@ public struct BalanceTransactionList: Codable {
     public var object: String
     public var url: String?
     public var hasMore: Bool?
+    @LossyList
     public var data: [BalanceTransaction]?
     
     public init(object: String,
