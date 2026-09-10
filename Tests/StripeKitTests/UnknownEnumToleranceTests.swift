@@ -515,11 +515,14 @@ final class UnknownEnumToleranceTests: XCTestCase {
         XCTAssertEqual(dropped.failureKind, "nonDecodingError",
                        "an integer that overflows Int never becomes a DecodingError, because "
                        + "JSONDecoder only converts its internal error at the outer boundary")
-        XCTAssertFalse(dropped.failureCodingPath.isEmpty,
-                       "so it falls back to the record path rather than handing the consumer an "
-                       + "empty grouping key and pushing it back onto the rendered description")
+        let keyed = dropped.failureCodingPath.enumerated()
+            .filter { !dropped.failureCodingPathIndices.contains($0.offset) }
+            .map(\.element)
+        XCTAssertEqual(keyed, ["data"],
+                       "so it falls back to the record path with the record index still marked, "
+                       + "and every record lost this way in a page shares one grouping key rather "
+                       + "than minting one per record off the rendered description")
     }
-
 }
 
 private struct LossyListProbeKey: CodingKey {
