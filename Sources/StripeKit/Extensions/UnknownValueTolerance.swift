@@ -60,6 +60,23 @@ public struct StripeDecodingReport: Sendable {
     public let codingPath: String
     public let outcome: Outcome
     public let failureDescription: String?
+    /// Which `DecodingError` case a dropped record failed on, as a stable token
+    /// (`typeMismatch`, `keyNotFound`, `valueNotFound`, `dataCorrupted`), `unknown` for a case
+    /// this package does not know yet, or `nonDecodingError` when the record failed on something
+    /// that never became a `DecodingError` at all.
+    ///
+    /// Separate from `failureDescription` because that one is `String(describing:)` of the error,
+    /// whose text differs between Darwin Foundation and swift-corelibs-foundation. A consumer that
+    /// parsed it to group failures worked on macOS and produced one group per record on Linux.
+    public let failureKind: String?
+    /// The coding path of the value that actually failed, which names the FIELD rather than the
+    /// record: `["data", "Index 3", "id"]`. The keyed segments are what a consumer wants to group
+    /// on, and the integer-indexed ones are what it wants to drop, so both are kept separate here
+    /// rather than pre-joined.
+    public let failureCodingPath: [String]
+    /// The positions in `failureCodingPath` that are array indices rather than keys, so a consumer
+    /// can drop them without guessing from the text.
+    public let failureCodingPathIndices: Set<Int>
 
     init(typeName: String,
          rawValue: String? = nil,
@@ -71,6 +88,54 @@ public struct StripeDecodingReport: Sendable {
         self.codingPath = codingPath.map(\.stringValue).joined(separator: ".")
         self.outcome = outcome
         self.failureDescription = underlyingError.map { String(describing: $0) }
+
+        if let underlyingError {
+            let decoding = underlyingError as? DecodingError
+
+            // A record can fail on something that is not a DecodingError at all: JSONDecoder
+            // converts its internal JSONError at the outermost decode boundary, and this catch
+            // sits inside that boundary, so an integer that overflows Int arrives raw. Falling
+            // back to the record's own path keeps the grouping key non-empty, and the kind says
+            // which of the two situations produced it.
+            self.failureKind = decoding.map(Self.kind) ?? "nonDecodingError"
+
+            let failurePath = decoding.map(Self.failurePath) ?? codingPath
+            self.failureCodingPath = failurePath.map(\.stringValue)
+            self.failureCodingPathIndices = Set(
+                failurePath.enumerated()
+                    .filter { $0.element.intValue != nil }
+                    .map(\.offset)
+            )
+        } else {
+            self.failureKind = nil
+            self.failureCodingPath = []
+            self.failureCodingPathIndices = []
+        }
+    }
+
+    private static func kind(_ error: DecodingError) -> String {
+        switch error {
+        case .typeMismatch: return "typeMismatch"
+        case .valueNotFound: return "valueNotFound"
+        case .keyNotFound: return "keyNotFound"
+        case .dataCorrupted: return "dataCorrupted"
+        @unknown default: return "unknown"
+        }
+    }
+
+    /// The path to the value that failed.
+    ///
+    /// `keyNotFound` is the odd one: its context path names the CONTAINER the key was missing
+    /// from, and the key itself rides the associated value, so it has to be appended or the path
+    /// stops one segment short of the thing that actually went wrong.
+    private static func failurePath(_ error: DecodingError) -> [CodingKey] {
+        switch error {
+        case .typeMismatch(_, let context): return context.codingPath
+        case .valueNotFound(_, let context): return context.codingPath
+        case .keyNotFound(let key, let context): return context.codingPath + [key]
+        case .dataCorrupted(let context): return context.codingPath
+        @unknown default: return []
+        }
     }
 }
 

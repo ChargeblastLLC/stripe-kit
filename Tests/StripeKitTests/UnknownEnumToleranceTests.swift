@@ -429,6 +429,100 @@ final class UnknownEnumToleranceTests: XCTestCase {
         ]))
         XCTAssertFalse(LossyList<Charge>.isPageResponse([]))
     }
+
+    func testADroppedRecordCarriesTheFailureKindAndTheFieldThatFailed() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: #"{ "id": 12345, "object": "charge", "created": 1 }"#)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "typeMismatch",
+                       "a stable token, not a rendering that differs between Foundations")
+        XCTAssertEqual(dropped.failureCodingPath.last, "id",
+                       "the path names the field that failed, which the record path cannot")
+        XCTAssertTrue(dropped.failureCodingPath.contains("data"))
+    }
+
+    func testTheFailurePathMarksWhichSegmentsAreRecordIndices() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: #"{ "id": 12345, "object": "charge", "created": 1 }"#)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        let keyed = dropped.failureCodingPath.enumerated()
+            .filter { !dropped.failureCodingPathIndices.contains($0.offset) }
+            .map(\.element)
+
+        XCTAssertEqual(keyed, ["data", "id"],
+                       "dropping the marked positions leaves the shape of the failure, which is "
+                       + "what two records broken the same way must share")
+        XCTAssertFalse(dropped.failureCodingPathIndices.isEmpty,
+                       "and the record index must be marked rather than left for a consumer to "
+                       + "guess out of the text")
+    }
+
+    func testAKeyNotFoundDropNamesTheMissingKey() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: #"{ "id": "ch_middle", "object": "charge" }"#)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "keyNotFound")
+        let keyed = dropped.failureCodingPath.enumerated()
+            .filter { !dropped.failureCodingPathIndices.contains($0.offset) }
+            .map(\.element)
+        XCTAssertEqual(keyed, ["data", "created"],
+                       "the missing key is appended exactly once, to the container's path")
+    }
+
+    func testAnUnmappedEnumValueCarriesNoFailureStructure() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: """
+        { "id": "ch_middle", "object": "charge", "created": 1, "currency": "usd",
+          "payment_method_details": { "type": "some_future_method" } }
+        """)
+
+        let report = try XCTUnwrap(collector.all.first { $0.outcome == .unknownValueDecodedAsNil })
+        XCTAssertNil(report.failureKind, "nothing failed, so there is no failure to describe")
+        XCTAssertTrue(report.failureCodingPath.isEmpty)
+    }
+
+    func testAValueNotFoundDropNamesTheFieldThatWasNull() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: #"{ "id": null, "object": "charge", "created": 1 }"#)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "valueNotFound")
+        XCTAssertEqual(dropped.failureCodingPath.last, "id")
+    }
+
+    func testARecordLostToSomethingOtherThanADecodingErrorStillGroups() throws {
+        let collector = ReportCollector.installed()
+        defer { collector.uninstall() }
+
+        _ = try decodePage(middleRecord: """
+        { "id": "ch_middle", "object": "charge", "created": 1, "amount": 99999999999999999999 }
+        """)
+
+        let dropped = try XCTUnwrap(collector.all.first { $0.outcome == .recordDropped })
+        XCTAssertEqual(dropped.failureKind, "nonDecodingError",
+                       "an integer that overflows Int never becomes a DecodingError, because "
+                       + "JSONDecoder only converts its internal error at the outer boundary")
+        let keyed = dropped.failureCodingPath.enumerated()
+            .filter { !dropped.failureCodingPathIndices.contains($0.offset) }
+            .map(\.element)
+        XCTAssertEqual(keyed, ["data"],
+                       "so it falls back to the record path with the record index still marked, "
+                       + "and every record lost this way in a page shares one grouping key rather "
+                       + "than minting one per record off the rendered description")
+    }
 }
 
 private struct LossyListProbeKey: CodingKey {
