@@ -95,7 +95,7 @@ final class UnknownEnumToleranceTests: XCTestCase {
           "object": "charge",
           "created": 1757404801,
           "currency": "usd",
-          "payment_method_details": { "type": "card", "card": { "brand": "elo", "last4": "1234" } }
+          "payment_method_details": { "type": "card", "card": { "brand": "some_future_brand", "last4": "1234" } }
         }
         """)
 
@@ -105,6 +105,21 @@ final class UnknownEnumToleranceTests: XCTestCase {
                        "sibling fields on the same record still decode")
         XCTAssertEqual(data[1].paymentMethodDetails?.card?.last4, "1234")
         XCTAssertNil(data[1].paymentMethodDetails?.card?.brand)
+    }
+
+    func testEloCardBrandDecodesToItsOwnCaseRatherThanBeingTolerated() throws {
+        let list = try decodePage(middleRecord: """
+        {
+          "id": "ch_middle",
+          "object": "charge",
+          "created": 1757404801,
+          "currency": "usd",
+          "payment_method_details": { "type": "card", "card": { "brand": "elo", "last4": "1234" } }
+        }
+        """)
+
+        let data = try XCTUnwrap(list.data)
+        XCTAssertEqual(data[1].paymentMethodDetails?.card?.brand, .elo)
     }
 
     func testUnknownCardPresentReceiptAccountTypeDoesNotAbortThePage() throws {

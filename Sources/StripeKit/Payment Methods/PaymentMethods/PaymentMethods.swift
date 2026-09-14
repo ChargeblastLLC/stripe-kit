@@ -174,6 +174,7 @@ public enum PaymentMethodDetailsCardBrand: String, Codable {
     case diners
     case discover
     case eftposAu = "eftpos_au"
+    case elo
     case jcb
     case mastercard
     case unionpay
@@ -190,6 +191,7 @@ public enum PaymentMethodCardNetwork: String, Codable {
     case discover
     case eftposAu = "eftpos_au"
     case eftposAus = "eftpos_aus"
+    case elo
     case interac
     case jcb
     case mastercard
