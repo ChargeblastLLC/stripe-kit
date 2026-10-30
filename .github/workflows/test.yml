@@ -3,5 +3,11 @@ on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
   push: { branches: [ main ] }
 jobs:
-  unit-tests:
-    uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: swift:6.2.3-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift build --build-tests
+      - run: swift test --skip-build
