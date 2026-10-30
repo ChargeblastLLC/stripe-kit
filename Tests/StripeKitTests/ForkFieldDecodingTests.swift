@@ -145,4 +145,29 @@ final class ForkFieldDecodingTests: XCTestCase {
         XCTAssertNotNil(dispute.evidenceDetails)
         XCTAssertNil(dispute.evidenceDetails?.dueBy)
     }
+
+    func testEventRoutesAnEarlyFraudWarningToItsCase() throws {
+        let event = try decode(Event.self, """
+        {
+            "id": "evt_123",
+            "object": "event",
+            "type": "radar.early_fraud_warning.created",
+            "data": {
+                "object": {
+                    "id": "issfr_123",
+                    "object": "radar.early_fraud_warning",
+                    "created": 1692942318,
+                    "charge": "ch_123",
+                    "fraud_type": "unauthorized_use_of_card"
+                }
+            }
+        }
+        """)
+
+        XCTAssertEqual(event.type, .radarEarlyFraudWarningCreated)
+        guard case .earlyFraudWarning(let warning) = event.data?.object else {
+            return XCTFail("expected .earlyFraudWarning, got \(String(describing: event.data?.object))")
+        }
+        XCTAssertEqual(warning.charge, "ch_123")
+    }
 }
